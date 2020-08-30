@@ -87,7 +87,7 @@ async function getNewPosts(sub = "r/Splatoon") {
         posts.push(post);
     });
 
-    return posts;
+    return posts.reverse();
 }
 
 /** @description Reports a post to the Sub Reddit mods on Reddit

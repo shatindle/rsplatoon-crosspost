@@ -34,6 +34,11 @@ function onDelete(callback = onDeleteCallback) {
  * @returns {string} The discord ID of the post
  */
 async function postRedditToDiscord(channelId = "744654431731318844", title = "", text = "", imageUrl = "", link = "", author = "u/", authorIcon = "") {
+    // handle spoilers
+    var reg = /(?<start>\>\!)(?<mid>[^<]+)(?<end><)/g;
+    text = text.replace(reg, "||$<mid>||");
+    
+    // post the content
     var message = await discord.channels.cache.get(channelId).send({
         embed: {
             title: title,
