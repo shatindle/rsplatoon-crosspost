@@ -74,13 +74,25 @@ async function getNewPosts(sub = "r/Splatoon") {
         var post = new RedditPost();
 
         post.title = submission.title;
-        post.image = submission.url;
+
+        if (submission.spoiler) {
+            if (submission.selftext) {
+                post.text = submission.selftext;
+            } else {
+                post.text = "[Image with spoiler]";
+            }
+            
+        } else {
+            post.image = submission.url;
+            post.text = submission.selftext;
+        }
+        
         post.link = "https://reddit.com" + submission.permalink;
         post.postedOn = submission.created_utc;
         post.author = "u/" + submission.author.name;
         post.authorIcon = user.icon_img;
         post.id = submission.id;
-        post.text = submission.selftext;
+        
         post.flairId = submission.link_flair_css_class;
         post.flairText = submission.link_flair_text;
 
