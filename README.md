@@ -7,3 +7,5 @@ A Reddit and Discord bot that posts Reddit posts to Discord, specifically for r/
 - package-lock.json
 - .vscode
 - discord.json
+- rsplatoon-discord-firebase.json
+- settings.json

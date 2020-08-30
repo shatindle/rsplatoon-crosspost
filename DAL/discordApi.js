@@ -2,6 +2,7 @@ const DiscordApi = require('discord.js');
 const discord = new DiscordApi.Client();
 const token = require('../discord.json').token;
 
+// login to discord - we should auto reconnect automatically
 discord.login(token);
 
 // the list of callback to run through when a message is deleted
@@ -33,30 +34,35 @@ function onDelete(callback = onDeleteCallback) {
  * 
  * @returns {string} The discord ID of the post
  */
-async function postRedditToDiscord(channelId = "744654431731318844", title = "", text = "", imageUrl = "", link = "", author = "u/", authorIcon = "") {
+async function postRedditToDiscord(channelId = "", title = "", text = "", imageUrl = "", link = "", author = "u/", authorIcon = "", color = 0) {
     // handle spoilers
     var reg = /(?<start>\>\!)(?<mid>[^<]+)(?<end><)/g;
     text = text.replace(reg, "||$<mid>||");
     
     // post the content
-    var message = await discord.channels.cache.get(channelId).send({
-        embed: {
-            title: title,
-            description: text,
-            url: link,
-            color: 5427530,
-            thumbnail: {
-                url: imageUrl
-            },
-            author: {
-                name: author,
-                url: "https://reddit.com/user/" + author.substring(2),
-                icon_url: authorIcon
+    try {
+        var message = await discord.channels.cache.get(channelId).send({
+            embed: {
+                title: title,
+                description: text,
+                url: link,
+                color: color,
+                thumbnail: {
+                    url: imageUrl
+                },
+                author: {
+                    name: author,
+                    url: "https://reddit.com/user/" + author.substring(2),
+                    icon_url: authorIcon
+                }
             }
-        }
-      });
-
-    return message.id;
+          });
+    
+        return message.id;
+    } catch {
+        console.log("offending link: " + imageUrl);
+    }
+    
 }
 
 discord.on('messageDelete', async message => {

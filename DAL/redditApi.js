@@ -34,12 +34,37 @@ class RedditPost {
 
     /** @description The flair text */
     flairText;
+
+    /** @description The color of the flair */
+    color;
 }
 
 async function asyncForEach(array, callback) {
     for (let index = 0; index < array.length; index++) {
         await callback(array[index], index, array);
     }
+}
+
+// TODO: make this dynamic and based on the subreddit
+const supportedColors = {
+    "Image": parseInt("ffd635", 16),
+    "Video": parseInt("f08f44", 16),
+    "Stream": parseInt("f08f44", 16),
+    "Official Tumblr": parseInt("445fff", 16),
+    "Splatfest": parseInt("e549a8", 16),
+    //"Spoiler": parseInt("")
+    "Discussion": parseInt("ff88bd", 16),
+    "Data": parseInt("349e48", 16),
+    "News": parseInt("5a0be6", 16),
+    "PSA": parseInt("00d5f9", 16),
+    "Satire": parseInt("738491", 16),
+    "Competitive": parseInt("cc0000", 16),
+    "Strategy": parseInt("cc0000", 16),
+    "Fan Art": parseInt("ffd635", 16),
+    "Meme": parseInt("738491", 16),
+    "Event": parseInt("5a0be6", 16),
+    "Salmon Run": parseInt("ff6a00", 16),
+    "Art Contest": parseInt("0bd598", 16)
 }
 
 /** @description Gets new posts from the r/Splatoon subreddit
@@ -83,8 +108,18 @@ async function getNewPosts(sub = "r/Splatoon") {
             }
             
         } else {
-            post.image = submission.url;
+            post.image = submission.url || null;
             post.text = submission.selftext;
+        }
+
+        if (post.text.length > 1000) {
+            post.text = post.text.substring(0, 997) + "...";
+        }
+
+        // handle image redirect links to other posts
+        if (post.image && post.image.indexOf("/") === 0) {
+            post.text += "https://reddit.com" + post.image;
+            post.image = null;
         }
         
         post.link = "https://reddit.com" + submission.permalink;
@@ -95,6 +130,12 @@ async function getNewPosts(sub = "r/Splatoon") {
         
         post.flairId = submission.link_flair_css_class;
         post.flairText = submission.link_flair_text;
+
+        if (supportedColors[post.flairText]) {
+            post.color = supportedColors[post.flairText];
+        } else {
+            post.color = 5427530;
+        }
 
         posts.push(post);
     });

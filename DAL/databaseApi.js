@@ -1,34 +1,58 @@
+const Firestore = require('@google-cloud/firestore');
 
-// poor man's database
-var db = [];
+const db = new Firestore({
+    projectId: 'rsplatoon-discord',
+    keyFilename: './rsplatoon-discord-firebase.json',
+});
 
 async function findByRedditId(id) {
-    for (var i = 0; i < db.length; i++) {
-        if (db[i].redditId === id)
-            return db[i];
-    }
+    var response = await db.collection("associations").where("redditId", "==", id).get();
 
-    return null;
+    if (response.empty)
+        return null;
+
+    var result;
+
+    response.forEach((doc) => {
+        result = doc.data();
+    });
+    
+    return result;
 }
 
 async function findByDiscordId(id) {
-    for (var i = 0; i < db.length; i++) {
-        if (db[i].discordId === id)
-            return db[i];
-    }
+    var response = await db.collection("associations").where("discordId", "==", id).get();
 
-    return null;
+    if (response.empty)
+        return null;
+
+    var result;
+
+    response.forEach((doc) => {
+        result = doc.data();
+    });
+    
+    return result;
 }
 
 async function associateIds(redditId, discordId) {
-    db.push({
+    await db.collection("associations").add({
         discordId: discordId,
         redditId: redditId
+    });
+}
+
+async function markReported(redditId, deletedBy) {
+    var response = await db.collection("associations").where("redditId", "==", redditId).get();
+
+    await db.collection("associations").doc(response.docs[0].id).update({
+        reportedBy: deletedBy
     });
 }
 
 module.exports = {
     findByRedditId: findByRedditId,
     findByDiscordId: findByDiscordId,
-    associateIds: associateIds
+    associateIds: associateIds,
+    markReported: markReported
 };
