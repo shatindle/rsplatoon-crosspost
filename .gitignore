@@ -1,0 +1,5 @@
+node_modules
+oauth_info.json
+package-lock.json
+.vscode
+discord.json

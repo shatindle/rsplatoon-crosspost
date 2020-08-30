@@ -1,0 +1,37 @@
+{
+  "name": "rsplatoon-crosspost",
+  "version": "1.0.0",
+  "description": "A Reddit and Discord bot that posts Reddit posts to Discord, specifically for r/Splatoon. The bot is also capable of reporting Reddit posts when they are deleted from Discord by a mod.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ./index.js",
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shatindle/rsplatoon-crosspost.git"
+  },
+  "keywords": [
+    "discord",
+    "reddit",
+    "rsplatoon",
+    "crosspost",
+    "moderation",
+    "fun"
+  ],
+  "author": "shane#1353",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/shatindle/rsplatoon-crosspost/issues"
+  },
+  "homepage": "https://github.com/shatindle/rsplatoon-crosspost#readme",
+  "dependencies": {
+    "discord.js": "^12.3.1",
+    "snoowrap": "^1.21.0"
+  },
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "mocha": "^8.1.3",
+    "rewiremock": "^3.14.3"
+  }
+}
