@@ -70,7 +70,7 @@ const supportedColors = {
 /** @description Gets new posts from the r/Splatoon subreddit
  * 
  * @param {string} sub The subreddit to get new posts from
- * @returns {Array<RedditPost>} A list of new Reddit posts
+ * @returns {Promise<Array<RedditPost>>} A list of new Reddit posts
  */
 async function getNewPosts(sub = "r/Splatoon") {
     var newPosts = await reddit.getSubreddit(sub)
@@ -92,6 +92,7 @@ async function getNewPosts(sub = "r/Splatoon") {
         }
 
         if (!user) {
+            // @ts-ignore
             user = await reddit.getUser(submission.author.name).fetch();
             users.push(user);
         }
@@ -122,6 +123,16 @@ async function getNewPosts(sub = "r/Splatoon") {
             post.image = null;
         }
 
+        // if this is a video with a preview, pull in the preview image
+        if (submission.post_hint === "hosted:video"
+            && submission.preview
+            && submission.preview.images
+            && submission.preview.images.length > 0
+            && submission.preview.images[0].source
+            && submission.preview.images[0].source.url) {
+            post.image = submission.preview.images[0].source.url;
+        }
+
         post.link = "https://reddit.com" + submission.permalink;
         post.postedOn = submission.created_utc;
         post.author = "u/" + submission.author.name;
@@ -149,6 +160,7 @@ async function getNewPosts(sub = "r/Splatoon") {
  * @param {string} removedBy 
  */
 async function reportPost(id, removedBy) {
+    // @ts-ignore
     var post = await reddit.getSubmission(id);
 
     await post.report({
