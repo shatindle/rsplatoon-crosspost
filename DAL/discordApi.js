@@ -38,6 +38,9 @@ async function postRedditToDiscord(channelId = "", title = "", text = "", imageU
     // handle spoilers
     var reg = /(?<start>\>\!)(?<mid>[^<]+)(?<end><)/g;
     text = text.replace(reg, "||$<mid>||");
+
+    if (title.length > 256)
+        title = title.substring(0, 250) + "...";
     
     // post the content
     try {
@@ -59,7 +62,7 @@ async function postRedditToDiscord(channelId = "", title = "", text = "", imageU
           });
     
         return message.id;
-    } catch {
+    } catch(err) {
         console.log("offending link: " + imageUrl);
     }
     
