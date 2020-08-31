@@ -25,7 +25,6 @@ discordApi.onDelete(async (messageId, guild, deletedBy) => {
 
 const artFlair = [
     "Fan Art",
-    "Image",
     "Art Contest"
 ];
 
