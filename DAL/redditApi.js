@@ -106,14 +106,14 @@ async function getNewPosts(sub = "r/Splatoon") {
             } else {
                 post.text = "[Image with spoiler]";
             }
-            
+
         } else {
             post.image = submission.url || null;
             post.text = submission.selftext;
         }
 
-        if (post.text.length > 1000) {
-            post.text = post.text.substring(0, 997) + "...";
+        if (post.text.length > 1500) {
+            post.text = post.text.substring(0, 1497) + "...";
         }
 
         // handle image redirect links to other posts
@@ -121,13 +121,13 @@ async function getNewPosts(sub = "r/Splatoon") {
             post.text += "https://reddit.com" + post.image;
             post.image = null;
         }
-        
+
         post.link = "https://reddit.com" + submission.permalink;
         post.postedOn = submission.created_utc;
         post.author = "u/" + submission.author.name;
         post.authorIcon = user.icon_img;
         post.id = submission.id;
-        
+
         post.flairId = submission.link_flair_css_class;
         post.flairText = submission.link_flair_text;
 
@@ -150,9 +150,9 @@ async function getNewPosts(sub = "r/Splatoon") {
  */
 async function reportPost(id, removedBy) {
     var post = await reddit.getSubmission(id);
-    
-    await post.report({ 
-        reason: "This post was removed from r/Splatoon Discord by " + removedBy 
+
+    await post.report({
+        reason: "This post was removed from r/Splatoon Discord by " + removedBy
     });
 }
 
