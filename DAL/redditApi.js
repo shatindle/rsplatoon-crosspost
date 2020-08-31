@@ -123,6 +123,28 @@ async function getNewPosts(sub = "r/Splatoon") {
             post.image = null;
         }
 
+        if (submission.media_metadata) {
+            for (var item in submission.media_metadata) {
+                if (submission.media_metadata[item] && submission.media_metadata[item].e === "Image") {
+                    if (submission.media_metadata[item].m === "image/png") {
+                        post.image = "https://i.redd.it/" + submission.gallery_data.items[0].media_id + ".png";
+                        break;
+                    }
+
+                    if (submission.media_metadata[item].m === "image/gif") {
+                        post.image = "https://i.redd.it/" + submission.gallery_data.items[0].media_id + ".gif";
+                        break;
+                    }
+
+                    if (submission.media_metadata[item].m === "image/jpg"
+                        || submission.media_metadata[item].m === "image/jpeg") {
+                        post.image = "https://i.redd.it/" + submission.gallery_data.items[0].media_id + ".jpg";
+                        break;
+                    }
+                }
+            }
+        }
+
         // if this is a video with a preview, pull in the preview image
         if (submission.post_hint === "hosted:video"
             && submission.preview
