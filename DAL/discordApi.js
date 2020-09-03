@@ -10,8 +10,9 @@ var callbacks = [];
 
 /** @description The callback function to execute for a deleted post
  * 
- * @param {*} id The Discord ID that was deleted
- * @param {*} deletedBy The Discord handle of the user that deleted the post in Discord
+ * @param {string} messageId The Discord ID that was deleted
+ * @param {string} guildId The ID of the guild this message was deleted from
+ * @param {string} deletedBy The Discord handle of the user that deleted the post in Discord
  */
 function onDeleteCallback(messageId = "", guildId = "", deletedBy = "") { }
 
@@ -32,7 +33,7 @@ function onDelete(callback = onDeleteCallback) {
  * @param {string} link The link to the post in Reddit
  * @param {string} author The author of the post on Reddit (in the form of u/author)
  * 
- * @returns {string} The discord ID of the post
+ * @returns {Promise<string>} The discord ID of the post
  */
 async function postRedditToDiscord(channelId = "", title = "", text = "", imageUrl = "", link = "", author = "u/", authorIcon = "", color = 0) {
     // handle discord links
@@ -65,6 +66,7 @@ async function postRedditToDiscord(channelId = "", title = "", text = "", imageU
             }
         });
 
+        // @ts-ignore
         return message.id;
     } catch (err) {
         console.log("offending link: " + imageUrl);
@@ -101,6 +103,7 @@ discord.on('messageDelete', async message => {
 
     // And now we can update our output with a bit more information
     // We will also run a check to make sure the log we got was for the same author's message
+    // @ts-ignore
     if (target.id === message.author.id) {
         for (var i = 0; i < callbacks.length; i++) {
             try {
