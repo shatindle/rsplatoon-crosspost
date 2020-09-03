@@ -10,10 +10,11 @@ var callbacks = [];
 
 /** @description The callback function to execute for a deleted post
  * 
- * @param {*} id The Discord ID that was deleted
- * @param {*} deletedBy The Discord handle of the user that deleted the post in Discord
+ * @param {string} messageId The Discord ID that was deleted
+ * @param {string} guildId The ID of the guild this message was deleted from
+ * @param {string} deletedBy The Discord handle of the user that deleted the post in Discord
  */
-function onDeleteCallback(messageId = "", guildId = "", deletedBy = "") {}
+function onDeleteCallback(messageId = "", guildId = "", deletedBy = "") { }
 
 /** @description Add a function to ondelete callback
  * 
@@ -32,16 +33,20 @@ function onDelete(callback = onDeleteCallback) {
  * @param {string} link The link to the post in Reddit
  * @param {string} author The author of the post on Reddit (in the form of u/author)
  * 
- * @returns {string} The discord ID of the post
+ * @returns {Promise<string>} The discord ID of the post
  */
 async function postRedditToDiscord(channelId = "", title = "", text = "", imageUrl = "", link = "", author = "u/", authorIcon = "", color = 0) {
+    // handle discord links
+    var discordLinkPattern = /(https?:\/\/)?(www\.)?(discord\.(gg|io|me|li)|discordapp\.com\/invite)\/[a-zA-Z0-9_.-]+/g;
+    text = text.replace(discordLinkPattern, "[discord link]");
+
     // handle spoilers
-    var reg = /(?<start>\>\!)(?<mid>[^<]+)(?<end><)/g;
-    text = text.replace(reg, "||$<mid>||");
+    var spoilerPattern = /(?<start>\>\!)(?<mid>[^<]+)(?<end><)/g;
+    text = text.replace(spoilerPattern, "||$<mid>||");
 
     if (title.length > 256)
         title = title.substring(0, 250) + "...";
-    
+
     // post the content
     try {
         var message = await discord.channels.cache.get(channelId).send({
@@ -59,13 +64,14 @@ async function postRedditToDiscord(channelId = "", title = "", text = "", imageU
                     icon_url: authorIcon
                 }
             }
-          });
-    
+        });
+
+        // @ts-ignore
         return message.id;
-    } catch(err) {
+    } catch (err) {
         console.log("offending link: " + imageUrl);
     }
-    
+
 }
 
 discord.on('messageDelete', async message => {
@@ -74,7 +80,7 @@ discord.on('messageDelete', async message => {
 
     // ignore posts we did not make
     if (message.author.id !== discord.user.id) return;
-    
+
     const fetchedLogs = await message.guild.fetchAuditLogs({
         limit: 1,
         type: 'MESSAGE_DELETE',
@@ -83,12 +89,11 @@ discord.on('messageDelete', async message => {
     const deletionLog = fetchedLogs.entries.first();
 
     // Let's perform a coherence check here and make sure we got *something*
-    if (!deletionLog) 
-    {
+    if (!deletionLog) {
         for (var i = 0; i < callbacks.length; i++) {
             try {
                 callbacks[i](message.id, message.guild.id, null);
-            } catch {}
+            } catch { }
         }
     }
 
@@ -98,17 +103,18 @@ discord.on('messageDelete', async message => {
 
     // And now we can update our output with a bit more information
     // We will also run a check to make sure the log we got was for the same author's message
+    // @ts-ignore
     if (target.id === message.author.id) {
         for (var i = 0; i < callbacks.length; i++) {
             try {
                 callbacks[i](message.id, message.guild.id, executor.tag);
-            } catch {}
+            } catch { }
         }
     } else {
         for (var i = 0; i < callbacks.length; i++) {
             try {
                 callbacks[i](message.id, message.guild.id, null);
-            } catch {}
+            } catch { }
         }
     }
 });
