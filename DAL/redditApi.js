@@ -125,7 +125,11 @@ async function getNewPosts(sub = "r/Splatoon") {
 
         if (submission.media_metadata) {
             for (var item in submission.media_metadata) {
-                if (submission.media_metadata[item] && submission.media_metadata[item].e === "Image") {
+                if (submission.media_metadata[item] 
+                    && submission.media_metadata[item].e === "Image" 
+                    && submission.gallery_data 
+                    && submission.gallery_data.items
+                    && submission.gallery_data.items.length > 0) {
                     if (submission.media_metadata[item].m === "image/png") {
                         post.image = "https://i.redd.it/" + submission.gallery_data.items[0].media_id + ".png";
                         break;
