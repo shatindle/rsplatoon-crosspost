@@ -60,7 +60,10 @@ async function getNewPosts() {
                 redditPost.link, 
                 redditPost.author, 
                 redditPost.authorIcon,
-                redditPost.color);
+                redditPost.color,
+                redditPost.postedOn,
+                redditPost.flairText,
+                redditPost.flairIcon);
 
             database.associateIds(redditPost.id, discordId);
         }

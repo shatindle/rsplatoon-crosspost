@@ -32,10 +32,27 @@ function onDelete(callback = onDeleteCallback) {
  * @param {string} imageUrl The image link (if any)
  * @param {string} link The link to the post in Reddit
  * @param {string} author The author of the post on Reddit (in the form of u/author)
+ * @param {string} authorIcon The icon of the author on Reddit
+ * @param {number} color The color of the flair
+ * @param {number} timestamp The UTC epoch date the post was made
+ * @param {string} flairText The text of the flair used in Reddit
+ * @param {string} flairIcon The flair icon image for this flair
  * 
  * @returns {Promise<string>} The discord ID of the post
  */
-async function postRedditToDiscord(channelId = "", title = "", text = "", imageUrl = "", link = "", author = "u/", authorIcon = "", color = 0) {
+async function postRedditToDiscord(
+    channelId = "", 
+    title = "", 
+    text = "", 
+    imageUrl = "", 
+    link = "", 
+    author = "u/", 
+    authorIcon = "", 
+    color = 0, 
+    timestamp = 0, 
+    flairText = "", 
+    flairIcon = "") {
+
     // handle discord links
     var discordLinkPattern = /(https?:\/\/)?(www\.)?(discord\.(gg|io|me|li)|discordapp\.com\/invite)\/[a-zA-Z0-9_.-]+/g;
     text = text.replace(discordLinkPattern, "[discord link]");
@@ -58,11 +75,16 @@ async function postRedditToDiscord(channelId = "", title = "", text = "", imageU
                 thumbnail: {
                     url: imageUrl
                 },
+                timestamp: new Date(timestamp * 1000).toISOString(),
                 author: {
                     name: author,
                     url: "https://reddit.com/user/" + author.substring(2),
                     icon_url: authorIcon
-                }
+                },
+                footer: {
+                    icon_url: flairIcon,
+                    text: flairText
+                  }
             }
         });
 
