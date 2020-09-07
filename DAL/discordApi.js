@@ -82,7 +82,7 @@ async function postRedditToDiscord(
                     icon_url: authorIcon
                 },
                 footer: {
-                    icon_url: flairIcon,
+                    //icon_url: flairIcon,
                     text: flairText
                   }
             }
