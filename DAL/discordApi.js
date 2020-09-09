@@ -79,7 +79,7 @@ async function postRedditToDiscord(
                 author: {
                     name: author,
                     url: "https://reddit.com/user/" + author.substring(2),
-                    icon_url: authorIcon
+                    icon_url: authorIcon ? authorIcon : null
                 },
                 footer: {
                     //icon_url: flairIcon,

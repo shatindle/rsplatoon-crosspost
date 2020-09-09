@@ -109,7 +109,7 @@ async function getNewPosts(sub = "r/Splatoon") {
         var user;
 
         for (var i = 0; i < users.length; i++) {
-            if (users[i].name === submission.author.name) {
+            if (users[i] && users[i].name === submission.author.name) {
                 user = users[i];
                 break;
             }
@@ -117,7 +117,12 @@ async function getNewPosts(sub = "r/Splatoon") {
 
         if (!user) {
             // @ts-ignore
-            user = await reddit.getUser(submission.author.name).fetch();
+            try {
+                user = await reddit.getUser(submission.author.name).fetch();
+            } catch {
+                user = null;
+            }
+            
             users.push(user);
         }
 
@@ -186,7 +191,9 @@ async function getNewPosts(sub = "r/Splatoon") {
         post.link = "https://reddit.com" + submission.permalink;
         post.postedOn = submission.created_utc;
         post.author = "u/" + submission.author.name;
-        post.authorIcon = user.icon_img;
+        if (user !== null) 
+            post.authorIcon = user.icon_img;
+            
         post.id = submission.id;
 
         post.flairId = submission.link_flair_css_class;
