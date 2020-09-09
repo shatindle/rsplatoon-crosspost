@@ -123,7 +123,8 @@ async function getNewPosts(sub = "r/Splatoon") {
                 user = null;
             }
             
-            users.push(user);
+            if (user)
+                users.push(user);
         }
 
         var post = new RedditPost();
