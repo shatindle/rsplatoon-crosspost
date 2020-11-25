@@ -24,6 +24,42 @@ function onDelete(callback = onDeleteCallback) {
     callbacks.push(callback);
 }
 
+/** @description Gets the message history for a channel, sorted by newest
+ * 
+ * @param {*} channelId The channel ID
+ * @param {*} limit The maximum number of messages to retrieve
+ * @returns {Array} List of messages
+ */
+async function getMessageHistory(
+    channelId = "",
+    limit = 10) {
+
+    var channel = discord.channels.cache.get(channelId);
+    
+    var lastMessages = (await channel.messages.fetch({ limit: limit })).first(10);
+
+    var list = [];
+
+    for (var i = 0; i < lastMessages.length; i++) {
+        list.push({
+            text: lastMessages[i].content,
+            authorId: lastMessages[i].author.id,
+            embeds: lastMessages[i].embeds,
+            createdOn: new Date(lastMessages[i].createdTimestamp),
+            messageLink: lastMessages[i].url
+        })
+    }
+
+    return list;
+}
+
+/** @description Gets the bot's ID
+ * @returns {string} The bot ID
+ */
+function getBotId() {
+    return discord.user.id;
+}
+
 /** @description Post a message to discord
  * 
  * @param {string} channelId The channel ID to post this message to
@@ -143,5 +179,7 @@ discord.on('messageDelete', async message => {
 
 module.exports = {
     onDelete: onDelete,
-    postRedditToDiscord: postRedditToDiscord
+    postRedditToDiscord: postRedditToDiscord,
+    getMessageHistory: getMessageHistory,
+    getBotId: getBotId
 };
