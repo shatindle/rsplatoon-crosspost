@@ -123,7 +123,7 @@ async function getNewPosts() {
             }
 
             var discordId = await discordApi.postRedditToDiscord(
-                getChannel(redditPost.flairText), 
+                channelToUse, 
                 redditPost.title, 
                 redditPost.text, 
                 redditPost.image, 
