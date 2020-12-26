@@ -25,6 +25,7 @@ If you want to use a different datastore or move to an in-memory only model, the
 
 # info for getting your OAuth2 token for reddit
 [https://github.com/reddit-archive/reddit/wiki/OAuth2](https://github.com/reddit-archive/reddit/wiki/OAuth2)
+You will also need to acquire a refresh token using your client ID and secret.  Helpful script to do this: [https://github.com/not-an-aardvark/reddit-oauth-helper](https://github.com/not-an-aardvark/reddit-oauth-helper)
 
 # info for getting your discord bot token
 [https://discord.com/developers/applications](https://discord.com/developers/applications)
