@@ -91,15 +91,12 @@ const flairIcons = {
     "Art Contest": "https://cdn.discordapp.com/attachments/752615708709617796/752629013704343562/image.png"
 }
 
-/** @description Gets new posts from the r/Splatoon subreddit
- * 
- * @param {string} sub The subreddit to get new posts from
+/**
+ * @description Processes posts and converts them to the standard format other functions expect
+ * @param {RedditApi.Listing<RedditApi.Submission>} newPosts 
  * @returns {Promise<Array<RedditPost>>} A list of new Reddit posts
  */
-async function getNewPosts(sub = "r/Splatoon") {
-    var newPosts = await reddit.getSubreddit(sub)
-        .getNew();
-
+async function ProcessPosts(newPosts) {
     var posts = [];
 
     // cache users so we don't call this API excessively
@@ -218,6 +215,32 @@ async function getNewPosts(sub = "r/Splatoon") {
     return posts.reverse();
 }
 
+/** @description Gets new posts from the r/Splatoon subreddit
+ * 
+ * @param {string} sub The subreddit to get new posts from
+ * @returns {Promise<Array<RedditPost>>} A list of new Reddit posts
+ */
+async function getNewPosts(sub = "r/Splatoon") {
+    var newPosts = await reddit.getSubreddit(sub)
+        .getNew();
+
+    return ProcessPosts(newPosts);
+}
+
+/** @description Gets a random post from the r/Splatoon subreddit
+ * 
+ * @param {string} sub The subreddit to get new posts from
+ * @returns {Promise<Array<RedditPost>>} A list of new Reddit posts
+ */
+async function getRandomPost(sub = "r/Splatoon") {
+    var randomPost = await reddit.getSubreddit(sub)
+        .getRandomSubmission();
+
+    var postWrapper = [randomPost];
+
+    return ProcessPosts(postWrapper);
+}
+
 /** @description Reports a post to the Sub Reddit mods on Reddit
  * 
  * @param {string} id 
@@ -234,5 +257,6 @@ async function reportPost(id, removedBy) {
 
 module.exports = {
     getNewPosts: getNewPosts,
-    reportPost: reportPost
+    reportPost: reportPost,
+    getRandomPost: getRandomPost
 };
