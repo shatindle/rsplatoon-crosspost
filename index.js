@@ -23,6 +23,45 @@ discordApi.onDelete(async (messageId, guild, deletedBy) => {
     }
 });
 
+var lastMessageTimestamp = null;
+
+/** @description When a user posts a message in Discord that pings the bot, respond.
+ * 
+ */
+discordApi.onMessage(async (message) => { 
+    var text = message.content.toLocaleLowerCase();
+
+    if (text.indexOf("get random") > -1) {
+        // check for ratelimit
+        var postedOn = new Date(message.createdTimestamp);
+
+        if (lastMessageTimestamp !== null && Math.abs(postedOn - lastMessageTimestamp) < 5000)
+            return await discordApi.rateLimit(message.channel.id);
+
+        lastMessageTimestamp = postedOn;
+
+        // get a random post
+        var posts = await redditApi.getRandomPost(subReddit);
+
+        var redditPost = posts[0];
+
+        await discordApi.postRedditToDiscord(
+            message.channel.id, 
+            redditPost.title, 
+            redditPost.text, 
+            redditPost.image, 
+            redditPost.link, 
+            redditPost.author, 
+            redditPost.authorIcon,
+            redditPost.color,
+            redditPost.postedOn,
+            redditPost.flairText,
+            redditPost.flairIcon);
+    } else {
+        await discordApi.postHelp(message.channel.id);
+    }
+});
+
 const artFlair = [
     "Fan Art",
     "Art Contest"

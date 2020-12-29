@@ -6,7 +6,10 @@ const token = require('../discord.json').token;
 discord.login(token);
 
 // the list of callback to run through when a message is deleted
-var callbacks = [];
+var deleteCallbacks = [];
+
+// the list of callbacks to run through when a message is seen
+var messageCallbacks = [];
 
 /** @description The callback function to execute for a deleted post
  * 
@@ -16,12 +19,26 @@ var callbacks = [];
  */
 function onDeleteCallback(messageId = "", guildId = "", deletedBy = "") { }
 
+/** @description The callback function to execute for a message post
+ * 
+ * @param {DiscordApi.Message} message The Discord message
+ */
+function onMessageCallback(message) { }
+
 /** @description Add a function to ondelete callback
  * 
  * @param {onDeleteCallback} callback A function that will execute when a message is deleted.  MessageId, GuildId, and DeletedBy will be provided.
  */
 function onDelete(callback = onDeleteCallback) {
-    callbacks.push(callback);
+    deleteCallbacks.push(callback);
+}
+
+/** @description Add a function to onmessage callback
+ * 
+ * @param {onDeleteCallback} callback A function that will execute when a message is sent by a user.  Message will be provided.
+ */
+function onMessage(callback = onMessageCallback) {
+    messageCallbacks.push(callback);
 }
 
 /** @description Gets the message history for a channel, sorted by newest
@@ -132,6 +149,79 @@ async function postRedditToDiscord(
 
 }
 
+const rateLimitMessages = [
+    "You're killing me smalls! Wait a few seconds and try again.",
+    "Let me catch my breath please. I'll be back shortly.",
+    "Bruh.",
+    "Dude, I'm salary. I don't get paid for overtime.",
+    "Look. You seem nice. But you're pinging me too much. Give me a bit.",
+    "I'm sorry, but I'm not here right now. Please leave your name and number at the beep. **BEEP**",
+    "brb mom needs comp",
+    "g2g bye",
+    "brb hw",
+    "I am unavailable because I'm playing a computer game that takes up the entire screen.",
+    "brb shower",
+    "brb 1 min",
+    "I'm going to get grounded if you don't stop constantly pinging me!",
+    "brb tornado"
+];
+
+/** @description Tells the user to slow down
+ * 
+ * @param {string} channelId 
+ */
+async function rateLimit(channelId = "") {
+    try {
+        var item = rateLimitMessages[Math.floor(Math.random() * rateLimitMessages.length)];
+
+        await discord.channels.cache.get(channelId).send(item);
+    } catch (err) {
+        console.log("Error ratelimit to channel: " + channelId);
+    }
+}
+
+/** @description Tells the user how to use this bot
+ * 
+ * @param {string} channelId 
+ */
+async function postHelp(channelId = "") {
+    try {
+        await discord.channels.cache.get(channelId).send({
+            embed: {
+                title: "Commands and usage",
+                description: 
+                    "This bot is designed to pull in new posts from the subreddit automatically every minute. " +
+                    "It can distinguish between art and general posts. Additionally, it has some commands you can invoke " +
+                    "by mentioning the bot.\n\n" + 
+                    "__**Commands**__\n" + 
+                    "- **get random** Pulls in a random submission from the subreddit."
+            }
+        });
+    } catch (err) {
+        console.log("Error sending help to channel: " + channelId);
+    }
+}
+
+/** @description Listens for messages it is mentioned in so it can respond
+ * 
+ */
+discord.on('message', async message => {
+    // ignore direct messages
+    if (!message.guild) return;
+
+    // ignore posts from bots
+    if (message.author.bot) return;
+
+    // ignore posts we were not mentioned in
+    if (!message.mentions.has(discord.user)) return;
+
+    for (var i = 0; i < messageCallbacks.length; i++) {
+        try {
+            messageCallbacks[i](message);
+        } catch { }
+    }
+});
+
 discord.on('messageDelete', async message => {
     // ignore direct messages
     if (!message.guild) return;
@@ -148,9 +238,9 @@ discord.on('messageDelete', async message => {
 
     // Let's perform a coherence check here and make sure we got *something*
     if (!deletionLog) {
-        for (var i = 0; i < callbacks.length; i++) {
+        for (var i = 0; i < deleteCallbacks.length; i++) {
             try {
-                callbacks[i](message.id, message.guild.id, null);
+                deleteCallbacks[i](message.id, message.guild.id, null);
             } catch { }
         }
     }
@@ -163,15 +253,15 @@ discord.on('messageDelete', async message => {
     // We will also run a check to make sure the log we got was for the same author's message
     // @ts-ignore
     if (target.id === message.author.id) {
-        for (var i = 0; i < callbacks.length; i++) {
+        for (var i = 0; i < deleteCallbacks.length; i++) {
             try {
-                callbacks[i](message.id, message.guild.id, executor.tag);
+                deleteCallbacks[i](message.id, message.guild.id, executor.tag);
             } catch { }
         }
     } else {
-        for (var i = 0; i < callbacks.length; i++) {
+        for (var i = 0; i < deleteCallbacks.length; i++) {
             try {
-                callbacks[i](message.id, message.guild.id, null);
+                deleteCallbacks[i](message.id, message.guild.id, null);
             } catch { }
         }
     }
@@ -181,5 +271,8 @@ module.exports = {
     onDelete: onDelete,
     postRedditToDiscord: postRedditToDiscord,
     getMessageHistory: getMessageHistory,
-    getBotId: getBotId
+    getBotId: getBotId,
+    onMessage: onMessage,
+    postHelp: postHelp,
+    rateLimit: rateLimit
 };
