@@ -194,7 +194,8 @@ async function postHelp(channelId = "") {
                     "It can distinguish between art and general posts. Additionally, it has some commands you can invoke " +
                     "by mentioning the bot.\n\n" + 
                     "__**Commands**__\n" + 
-                    "- **get random** Pulls in a random submission from the subreddit."
+                    "- **get random** Pulls in a random submission from the subreddit.\n\n" +
+                    "[Source Code](https://github.com/shatindle/rsplatoon-crosspost)"
             }
         });
     } catch (err) {
