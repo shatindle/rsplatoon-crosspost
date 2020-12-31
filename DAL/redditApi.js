@@ -227,14 +227,69 @@ async function getNewPosts(sub = "r/Splatoon") {
     return ProcessPosts(newPosts);
 }
 
+// timeframes for random posts
+const timeframes = [
+    "hour", // 5% chance
+    "day", // 5% chance
+    "week", // 10% chance
+    "week",
+    "month", // 20% chance
+    "month",
+    "month",
+    "month",
+    "year", // 40% chance
+    "year",
+    "year",
+    "year",
+    "year",
+    "year",
+    "year",
+    "year",
+    "all", // 20% chance
+    "all",
+    "all",
+    "all"
+];
+
 /** @description Gets a random post from the r/Splatoon subreddit
  * 
  * @param {string} sub The subreddit to get new posts from
  * @returns {Promise<Array<RedditPost>>} A list of new Reddit posts
  */
 async function getRandomPost(sub = "r/Splatoon") {
-    var randomPost = await reddit.getSubreddit(sub)
-        .getRandomSubmission();
+    var randomPost;
+    var randomPosts;
+
+    var subreddit = reddit.getSubreddit(sub);
+
+    var randomCategory = Math.floor(Math.random() * 4);
+    var randomTimeframe = timeframes[Math.floor(Math.random() * timeframes.length)];
+
+    switch (randomCategory) {
+        case 0: // new
+            randomPosts = await subreddit.getNew();
+
+            randomPost = randomPosts[Math.floor(Math.random() * randomPosts.length)];
+            break;
+        case 1: // hot
+            randomPosts = await subreddit.getHot();
+
+            randomPost = randomPosts[Math.floor(Math.random() * randomPosts.length)];
+            break;
+        case 2: // top
+            randomPosts = await subreddit.getTop({ time: randomTimeframe });
+
+            randomPost = randomPosts[Math.floor(Math.random() * randomPosts.length)];
+            break;
+        case 3: // controversial
+            randomPosts = await subreddit.getControversial({ time: randomTimeframe });
+
+            randomPost = randomPosts[Math.floor(Math.random() * randomPosts.length)];
+            break;
+        default: // if we ever forget to increase it
+            randomPost = await reddit.getSubreddit(sub).getRandomSubmission();
+            break;
+    }
 
     var postWrapper = [randomPost];
 
