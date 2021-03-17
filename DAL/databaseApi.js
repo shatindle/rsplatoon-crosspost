@@ -5,7 +5,33 @@ const db = new Firestore({
     keyFilename: './rsplatoon-discord-firebase.json',
 });
 
+const localCache = [];
+
+function addToCache(item) {
+    localCache.unshift(item);
+
+    while (localCache.length > 100)
+        localCache.pop();
+}
+
+function checkCache(item) {
+    for (var i = 0; i < localCache.length; i++) {
+        if (localCache[i].redditId == item.redditId || localCache[i].discordId == item.discordId) {
+            var first = localCache[i];
+
+            localCache.sort(function(x,y){ return x == first ? -1 : y == first ? 1 : 0; });
+            
+            return first;
+        }
+    }
+}
+
 async function findByRedditId(id) {
+    var inCacheValue = checkCache({redditId: id});
+
+    if (inCacheValue)
+        return inCacheValue;
+
     var response = await db.collection("associations").where("redditId", "==", id).get();
 
     if (response.empty)
@@ -16,11 +42,18 @@ async function findByRedditId(id) {
     response.forEach((doc) => {
         result = doc.data();
     });
+
+    addToCache(result);
     
     return result;
 }
 
 async function findByDiscordId(id) {
+    var inCacheValue = checkCache({discordId: id});
+
+    if (inCacheValue)
+        return inCacheValue;
+
     var response = await db.collection("associations").where("discordId", "==", id).get();
 
     if (response.empty)
@@ -31,15 +64,21 @@ async function findByDiscordId(id) {
     response.forEach((doc) => {
         result = doc.data();
     });
+
+    addToCache(result);
     
     return result;
 }
 
 async function associateIds(redditId, discordId) {
-    await db.collection("associations").add({
+    var record = {
         discordId: discordId,
         redditId: redditId
-    });
+    };
+    
+    await db.collection("associations").add(record);
+
+    addToCache(record);
 }
 
 async function markReported(redditId, deletedBy) {
