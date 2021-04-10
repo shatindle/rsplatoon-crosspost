@@ -10,6 +10,7 @@ const subReddit = settings.subReddit;
 // #reddit-posts in Gardevoir's Mansion
 const artChannel = settings.discord.art;
 const generalChannel = settings.discord.general;
+const artContestChannel = settings.discord.artcontest;
 
 /** @description When a mod deletes our post in Discord, report the post in r/Splatoon reddit
  * 
@@ -63,7 +64,10 @@ discordApi.onMessage(async (message) => {
 });
 
 const artFlair = [
-    "Fan Art",
+    "Fan Art"
+];
+
+const artContestFlair = [
     "Art Contest"
 ];
 
@@ -75,6 +79,9 @@ const artFlair = [
 function getChannel(flairText) {
     if (artFlair.indexOf(flairText) > -1)
         return artChannel;
+
+    if (artContestFlair.indexOf(flairText) > -1)
+        return artContestChannel;
 
     return generalChannel;
 }
