@@ -1,9 +1,8 @@
 const DiscordApi = require('discord.js');
 const discord = new DiscordApi.Client();
 const token = require('../discord.json').token;
+const thisGuild = require('../settings.json').guild;
 
-// login to discord - we should auto reconnect automatically
-discord.login(token);
 
 // the list of callback to run through when a message is deleted
 var deleteCallbacks = [];
@@ -11,38 +10,76 @@ var deleteCallbacks = [];
 // the list of callbacks to run through when a message is seen
 var messageCallbacks = [];
 
-/** @description The callback function to execute for a deleted post
- * 
+// the list of interactions we support via slash commands
+var interactionCallbacks = {};
+
+// functions that will run after a successful login (but only once)
+var readyCallbacks = [];
+
+// successful login has completed
+var initialized = false;
+
+// login to discord - we should auto reconnect automatically
+discord.login(token).then(() => {
+    if (initialized) return;
+
+    for (var i = 0; i < readyCallbacks.length; i++)
+        readyCallbacks[i]();
+
+    initialized = true;
+});
+
+/** 
+ * @description The callback function to execute for a deleted post
  * @param {string} messageId The Discord ID that was deleted
  * @param {string} guildId The ID of the guild this message was deleted from
  * @param {string} deletedBy The Discord handle of the user that deleted the post in Discord
  */
 function onDeleteCallback(messageId = "", guildId = "", deletedBy = "") { }
 
-/** @description The callback function to execute for a message post
- * 
+/** 
+ * @description The callback function to execute for a message post
  * @param {DiscordApi.Message} message The Discord message
  */
 function onMessageCallback(message) { }
 
-/** @description Add a function to ondelete callback
- * 
+/**
+ * @description The callback function to execute for an interaction from a slash command
+ * @param {string} message The message to interact with
+ */
+function onInteractionCallback(message) { }
+
+/**
+ * @description The callback that will happen when the login is initialized for the first time
+ */
+function onReadyCallback() { }
+
+/** 
+ * @description Add a function to ondelete callback
  * @param {onDeleteCallback} callback A function that will execute when a message is deleted.  MessageId, GuildId, and DeletedBy will be provided.
  */
 function onDelete(callback = onDeleteCallback) {
     deleteCallbacks.push(callback);
 }
 
-/** @description Add a function to onmessage callback
- * 
+/** 
+ * @description Add a function to onmessage callback
  * @param {onDeleteCallback} callback A function that will execute when a message is sent by a user.  Message will be provided.
  */
 function onMessage(callback = onMessageCallback) {
     messageCallbacks.push(callback);
 }
 
-/** @description Gets the message history for a channel, sorted by newest
- * 
+/**
+ * @description A function that will be called when the login method has completed
+ * @param {onReadyCallback} callback A function that will be called when the discord client has logged in successfully
+ */
+function onReady(callback = onReadyCallback) {
+    readyCallbacks.push(callback);
+}
+
+/** 
+ * @description Gets the message history for a channel, sorted by newest
  * @param {*} channelId The channel ID
  * @param {*} limit The maximum number of messages to retrieve
  * @returns {Array} List of messages
@@ -70,15 +107,16 @@ async function getMessageHistory(
     return list;
 }
 
-/** @description Gets the bot's ID
+/** 
+ * @description Gets the bot's ID
  * @returns {string} The bot ID
  */
 function getBotId() {
     return discord.user.id;
 }
 
-/** @description Post a message to discord
- * 
+/** 
+ * @description Post a message to discord
  * @param {string} channelId The channel ID to post this message to
  * @param {string} title The title of the post
  * @param {string} text The text of the post (if any)
@@ -166,8 +204,8 @@ const rateLimitMessages = [
     "brb tornado"
 ];
 
-/** @description Tells the user to slow down
- * 
+/** 
+ * @description Tells the user to slow down
  * @param {string} channelId 
  */
 async function rateLimit(channelId = "") {
@@ -180,8 +218,8 @@ async function rateLimit(channelId = "") {
     }
 }
 
-/** @description Tells the user how to use this bot
- * 
+/** 
+ * @description Tells the user how to use this bot
  * @param {string} channelId 
  */
 async function postHelp(channelId = "") {
@@ -203,8 +241,27 @@ async function postHelp(channelId = "") {
     }
 }
 
-/** @description Listens for messages it is mentioned in so it can respond
- * 
+/**
+ * @description Registers a slash command for the bot (only needs to be run once)
+ * @param {string} name The slash command name
+ * @param {string} description User friendly description of the slash command
+ */
+function registerSlashCommand(name = "", description = "", responseCallback = onInteractionCallback) {
+    if (interactionCallbacks[name])
+        throw "Only one interaction register is allowed per slash command";
+    
+    discord.api.applications(discord.user.id).guilds(thisGuild).commands.post({
+        data: {
+            name: name,
+            description: description
+        }
+    });
+
+    interactionCallbacks[name] = responseCallback;
+}
+
+/** 
+ * @description Listens for messages it is mentioned in so it can respond
  */
 discord.on('message', async message => {
     // ignore direct messages
@@ -215,6 +272,9 @@ discord.on('message', async message => {
 
     // ignore posts we were not mentioned in
     if (!message.mentions.has(discord.user)) return;
+
+    // ignore replies
+    if (message.content.indexOf('<@!' + discord.user.id + '>') < 0) return;
 
     for (var i = 0; i < messageCallbacks.length; i++) {
         try {
@@ -268,6 +328,37 @@ discord.on('messageDelete', async message => {
     }
 });
 
+// handle slash commands
+discord.ws.on('INTERACTION_CREATE', async interaction => {
+    try {
+        var responseCallbacks = interactionCallbacks[interaction.data.name];
+
+        if (!responseCallbacks) {
+            discord.api.interactions(interaction.id, interaction.token).callback.post({
+                data: {
+                    type: 4,
+                    data: {
+                        content: 'Error: Unknown command issued'
+                    }
+                }
+            });
+            return;
+        }
+
+        // respond with a pong
+        discord.api.interactions(interaction.id, interaction.token).callback.post({
+            data: {
+                type: 4,
+                data: {
+                    content: 'Digging through reddit...'
+                }
+            }
+        });
+
+        await responseCallbacks(interaction);
+    } catch { }
+})
+
 module.exports = {
     onDelete: onDelete,
     postRedditToDiscord: postRedditToDiscord,
@@ -275,5 +366,7 @@ module.exports = {
     getBotId: getBotId,
     onMessage: onMessage,
     postHelp: postHelp,
-    rateLimit: rateLimit
+    rateLimit: rateLimit,
+    registerSlashCommand: registerSlashCommand,
+    onReady: onReady
 };
