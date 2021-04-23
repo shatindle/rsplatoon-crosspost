@@ -4,5 +4,6 @@
         "general": "MAIN CHANNEL ID TO POST TO IN DISCORD (for r/Splatoon, this is 749718471151190066)",
         "art": "ART CHANNEL ID TO POST TO IN DISCORD (for r/Splatoon, this is 661992897519812649)",
         "artcontest": "ART CONTEST CHANNEL ID TO POST TO IN DISCORD (for r/Splatoon, this is 830286772176814081)"
-    }
+    },
+    "guild": "GUILD TO REGISTER SLASH COMMANDS FOR"
 }

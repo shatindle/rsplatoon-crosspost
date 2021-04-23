@@ -249,6 +249,10 @@ async function postHelp(channelId = "") {
 function registerSlashCommand(name = "", description = "", responseCallback = onInteractionCallback) {
     if (interactionCallbacks[name])
         throw "Only one interaction register is allowed per slash command";
+
+    // for backwards compatibility
+    if (!thisGuild)
+        return;
     
     discord.api.applications(discord.user.id).guilds(thisGuild).commands.post({
         data: {
