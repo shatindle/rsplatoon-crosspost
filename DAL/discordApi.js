@@ -145,8 +145,9 @@ async function postRedditToDiscord(
     flairIcon = "") {
 
     // handle discord links
-    var discordLinkPattern = /(https?:\/\/)?(www\.)?(discord\.(gg|io|me|li)|discordapp\.com\/invite)\/[a-zA-Z0-9_.-]+/g;
+    var discordLinkPattern = /(https?:\/\/)?(www\.)?(discord\.(gg|io|me|li|com)|discordapp\.com\/invite)\/[a-zA-Z0-9_.-]+/g;
     text = text.replace(discordLinkPattern, "[discord link]");
+    title = title.replace(discordLinkPattern, "[discord link]");
 
     // handle spoilers
     var spoilerPattern = /(?<start>\>\!)(?<mid>[^<]+)(?<end><)/g;
