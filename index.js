@@ -87,11 +87,15 @@ if (settings.upvote) {
                 // create the links entry
                 var links = "";
                 
-                if (message.content) {
-                    message.content.match(urlRegex).forEach((urlMatch) => {
-                        // Do something with each element
-                        links += urlMatch + " ";
-                    });
+                try {
+                    if (message.content) {
+                        message.content.match(urlRegex).forEach((urlMatch) => {
+                            // Do something with each element
+                            links += urlMatch + " ";
+                        });
+                    }
+                } catch (err) { 
+                    console.log("problem extracting link: " + err); 
                 }
     
                 try {
