@@ -12,6 +12,8 @@ const artChannel = settings.discord.art;
 const generalChannel = settings.discord.general;
 const artContestChannel = settings.discord.artcontest;
 
+const urlRegex = /(https?:\/\/[^ ]*)/g;
+
 /** @description When a mod deletes our post in Discord, report the post in r/Splatoon reddit
  * 
  */
@@ -81,6 +83,14 @@ if (settings.upvote) {
                 message.attachments.forEach(function(a) {
                     attachments.push(a.url);
                 });
+                
+                // create the links entry
+                var links = "";
+                
+                message.content.match(urlRegex).forEach((urlMatch) => {
+                    // Do something with each element
+                    links += urlMatch + " ";
+                });
     
                 try {
                     await discordApi.postRedditToDiscord(
@@ -101,6 +111,13 @@ if (settings.upvote) {
                         await discordApi.postAttachments(
                             settings.discord.artfridge,
                             attachments
+                        );
+                    }
+                    
+                    if (links !== "") {
+                        await discordApi.postText(
+                            settings.discord.artfridge,
+                            links
                         );
                     }
                 } catch (err) { }
