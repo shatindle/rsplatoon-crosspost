@@ -63,6 +63,50 @@ discordApi.onMessage(async (message) => {
     }
 });
 
+if (settings.upvote) {
+    discordApi.onReaction(async function(reaction, user) {
+        if (reaction.message.channel.id === settings.discord.art) {
+            if (reaction.emoji.id !== settings.upvote) return;
+            if (reaction.message.author.bot) return;
+            if (reaction.count > 0) {
+                var message = reaction.message;
+    
+                if (await databaseApi.getArtFromFridge(message.id, message.guild.id))
+                    // it's already on the fridge
+                    return; 
+    
+                // create the art fridge entry
+                var attachments = [];
+    
+                message.attachments.forEach(function(a) {
+                    attachments.push(a.url);
+                });
+    
+                await discordApi.postRedditToDiscord(
+                    settings.discord.artfridge,
+                    "Source",
+                    message.content,
+                    "",
+                    message.url,
+                    message.author.tag,
+                    message.author.avatarURL(),
+                    parseInt("ffd635", 16),
+                    message.createdTimestamp / 1000,
+                    "",
+                    ""
+                );
+    
+                await discordApi.postAttachments(
+                    settings.discord.artfridge,
+                    attachments
+                );
+    
+                await databaseApi.postToFridge(message.id, message.guild.id);
+            }
+        }
+    });
+}
+
 discordApi.onReady(() => {
     discordApi.registerSlashCommand(
         "random", 

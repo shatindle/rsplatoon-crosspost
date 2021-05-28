@@ -5,21 +5,22 @@ const db = new Firestore({
     keyFilename: './rsplatoon-discord-firebase.json',
 });
 
-const localCache = [];
+const postCache = [];
+const fridgeCache = [];
 
-function addToCache(item) {
-    localCache.unshift(item);
+function addToCache(item, cache) {
+    cache.unshift(item);
 
-    while (localCache.length > 100)
-        localCache.pop();
+    while (cache.length > 100)
+        cache.pop();
 }
 
-function checkCache(item) {
-    for (var i = 0; i < localCache.length; i++) {
-        if (localCache[i].redditId == item.redditId || localCache[i].discordId == item.discordId) {
-            var first = localCache[i];
+function checkPostCache(item) {
+    for (var i = 0; i < postCache.length; i++) {
+        if (postCache[i].redditId == item.redditId || postCache[i].discordId == item.discordId) {
+            var first = postCache[i];
 
-            localCache.sort(function(x,y){ return x == first ? -1 : y == first ? 1 : 0; });
+            postCache.sort(function(x,y){ return x == first ? -1 : y == first ? 1 : 0; });
             
             return first;
         }
@@ -27,7 +28,7 @@ function checkCache(item) {
 }
 
 async function findByRedditId(id) {
-    var inCacheValue = checkCache({redditId: id});
+    var inCacheValue = checkPostCache({redditId: id});
 
     if (inCacheValue)
         return inCacheValue;
@@ -43,13 +44,13 @@ async function findByRedditId(id) {
         result = doc.data();
     });
 
-    addToCache(result);
+    addToCache(result, postCache);
     
     return result;
 }
 
 async function findByDiscordId(id) {
-    var inCacheValue = checkCache({discordId: id});
+    var inCacheValue = checkPostCache({discordId: id});
 
     if (inCacheValue)
         return inCacheValue;
@@ -65,7 +66,7 @@ async function findByDiscordId(id) {
         result = doc.data();
     });
 
-    addToCache(result);
+    addToCache(result, postCache);
     
     return result;
 }
@@ -78,7 +79,30 @@ async function associateIds(redditId, discordId) {
     
     await db.collection("associations").add(record);
 
-    addToCache(record);
+    addToCache(record, postCache);
+}
+
+async function postToFridge(messageId, guildId) {
+    var record = {
+        messageId: messageId,
+        guildId: guildId
+    };
+
+    await db.collection("artfridge").doc(guildId + "-" + messageId).set(record);
+
+    // TODO: add caching to avoid server wait
+    //addToCache(record, fridgeCache);
+}
+
+async function getArtFromFridge(messageId, guildId) {
+    // TODO: check fridge cache first
+
+    var doc = await db.collection("artfridge").doc(guildId + "-" + messageId).get();
+
+    if (doc.exists)
+        return doc.data();
+
+    return null;
 }
 
 async function markReported(redditId, deletedBy) {
@@ -93,5 +117,7 @@ module.exports = {
     findByRedditId: findByRedditId,
     findByDiscordId: findByDiscordId,
     associateIds: associateIds,
-    markReported: markReported
+    markReported: markReported,
+    postToFridge: postToFridge,
+    getArtFromFridge: getArtFromFridge
 };

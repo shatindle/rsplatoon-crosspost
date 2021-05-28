@@ -1,11 +1,14 @@
 const DiscordApi = require('discord.js');
-const discord = new DiscordApi.Client();
+const discord = new DiscordApi.Client({ partials: ['MESSAGE', 'CHANNEL', 'REACTION'] });
 const token = require('../discord.json').token;
 const thisGuild = require('../settings.json').guild;
 
 
 // the list of callback to run through when a message is deleted
 var deleteCallbacks = [];
+
+// the list of callbacks to run through when a message is reacted to
+var reactionCallbacks = [];
 
 // the list of callbacks to run through when a message is seen
 var messageCallbacks = [];
@@ -36,6 +39,13 @@ discord.login(token).then(() => {
  * @param {string} deletedBy The Discord handle of the user that deleted the post in Discord
  */
 function onDeleteCallback(messageId = "", guildId = "", deletedBy = "") { }
+
+/**
+ * @description The callback function to execute for a reaction to a post
+ * @param {MessageReaction} reaction An unfetched message the user reacted to
+ * @param {User} user The user that reacted
+ */
+async function onReactionCallback(reaction, user) { }
 
 /** 
  * @description The callback function to execute for a message post
@@ -68,6 +78,10 @@ function onDelete(callback = onDeleteCallback) {
  */
 function onMessage(callback = onMessageCallback) {
     messageCallbacks.push(callback);
+}
+
+function onReaction(callback = onReactionCallback) {
+    reactionCallbacks.push(callback);
 }
 
 /**
@@ -170,13 +184,13 @@ async function postRedditToDiscord(
                 timestamp: new Date(timestamp * 1000).toISOString(),
                 author: {
                     name: author,
-                    url: "https://reddit.com/user/" + author.substring(2),
+                    url: author.substring(0, 2) === "u/" ? "https://reddit.com/user/" + author.substring(2) : null,
                     icon_url: authorIcon ? authorIcon : null
                 },
                 footer: {
                     //icon_url: flairIcon,
                     text: flairText
-                  }
+                }
             }
         });
 
@@ -185,7 +199,20 @@ async function postRedditToDiscord(
     } catch (err) {
         console.log("offending link: " + imageUrl);
     }
+}
 
+async function postAttachments(channelId = "", attachments = []) {
+    // post the content
+    try {
+        var message = await discord.channels.cache.get(channelId).send({
+            files: attachments
+        });
+
+        // @ts-ignore
+        return message.id;
+    } catch (err) {
+        console.log("offending link: " + imageUrl);
+    }
 }
 
 const rateLimitMessages = [
@@ -292,6 +319,11 @@ discord.on('messageDelete', async message => {
     // ignore direct messages
     if (!message.guild) return;
 
+    if (message.partial) {
+        // skip partial messages since there's nothing to do with them
+        return;
+    }
+
     // ignore posts we did not make
     if (message.author.id !== discord.user.id) return;
 
@@ -362,7 +394,32 @@ discord.ws.on('INTERACTION_CREATE', async interaction => {
 
         await responseCallbacks(interaction);
     } catch { }
-})
+});
+
+// handle reactions
+discord.on("messageReactionAdd", async (reaction, user) => {
+    // When a reaction is received, check if the structure is partial
+    if (reaction.partial) {
+        // If the message this reaction belongs to was removed, the fetching might result in an API error which should be handled
+        try {
+            await reaction.fetch();
+        } catch (error) {
+            console.error('Something went wrong when fetching the message: ', error);
+            // Return as `reaction.message.author` may be undefined/null
+            return;
+        }
+    }
+
+    for (var i = 0; i < reactionCallbacks.length; i++) {
+        try {
+            await reactionCallbacks[i](reaction, user);
+        } catch { }
+    }
+    // // Now the message has been cached and is fully available
+    // console.log(`${reaction.message.author}'s message "${reaction.message.content}" gained a reaction!`);
+    // // The reaction is now also fully available and the properties will be reflected accurately:
+    // console.log(`${reaction.count} user(s) have given the same reaction to this message!`);
+});
 
 module.exports = {
     onDelete: onDelete,
@@ -373,5 +430,7 @@ module.exports = {
     postHelp: postHelp,
     rateLimit: rateLimit,
     registerSlashCommand: registerSlashCommand,
-    onReady: onReady
+    onReady: onReady,
+    onReaction: onReaction,
+    postAttachments: postAttachments
 };
