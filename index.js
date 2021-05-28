@@ -82,27 +82,33 @@ if (settings.upvote) {
                     attachments.push(a.url);
                 });
     
-                await discordApi.postRedditToDiscord(
-                    settings.discord.artfridge,
-                    "Source",
-                    message.content,
-                    "",
-                    message.url,
-                    message.author.tag,
-                    message.author.avatarURL(),
-                    parseInt("ffd635", 16),
-                    message.createdTimestamp / 1000,
-                    "",
-                    ""
-                );
-    
-                if (attachments.length > 0)
-                    await discordApi.postAttachments(
+                try {
+                    await discordApi.postRedditToDiscord(
                         settings.discord.artfridge,
-                        attachments
+                        "Source",
+                        message.content,
+                        "",
+                        message.url,
+                        message.author.tag,
+                        message.author.avatarURL(),
+                        parseInt("ffd635", 16),
+                        message.createdTimestamp / 1000,
+                        "",
+                        ""
                     );
-    
-                await databaseApi.postToFridge(message.id, message.guild.id);
+        
+                    if (attachments.length > 0) {
+                        await discordApi.postAttachments(
+                            settings.discord.artfridge,
+                            attachments
+                        );
+                    }
+                } catch (err) { }
+
+                try {
+                    await databaseApi.postToFridge(message.id, message.guild.id);
+                } catch (err) { console.log(err); }
+                
             }
         }
     });
