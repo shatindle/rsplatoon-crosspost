@@ -87,10 +87,12 @@ if (settings.upvote) {
                 // create the links entry
                 var links = "";
                 
-                message.content.match(urlRegex).forEach((urlMatch) => {
-                    // Do something with each element
-                    links += urlMatch + " ";
-                });
+                if (message.content) {
+                    message.content.match(urlRegex).forEach((urlMatch) => {
+                        // Do something with each element
+                        links += urlMatch + " ";
+                    });
+                }
     
                 try {
                     await discordApi.postRedditToDiscord(
