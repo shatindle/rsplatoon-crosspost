@@ -68,7 +68,7 @@ if (settings.upvote) {
         if (reaction.message.channel.id === settings.discord.art) {
             if (reaction.emoji.id !== settings.upvote) return;
             if (reaction.message.author.bot) return;
-            if (reaction.count > 0) {
+            if (reaction.count > 4) {
                 var message = reaction.message;
     
                 if (await databaseApi.getArtFromFridge(message.id, message.guild.id))
