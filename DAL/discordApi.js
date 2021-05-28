@@ -211,7 +211,19 @@ async function postAttachments(channelId = "", attachments = []) {
         // @ts-ignore
         return message.id;
     } catch (err) {
-        console.log("offending link: " + imageUrl);
+        console.log("attachments could not be sent: " + err);
+    }
+}
+
+async function postText(channelId = "", text = "") {
+    // post the content
+    try {
+        var message = await discord.channels.cache.get(channelId).send(text);
+
+        // @ts-ignore
+        return message.id;
+    } catch (err) {
+        console.log("text could not be sent: " + err);
     }
 }
 
@@ -432,5 +444,6 @@ module.exports = {
     registerSlashCommand: registerSlashCommand,
     onReady: onReady,
     onReaction: onReaction,
-    postAttachments: postAttachments
+    postAttachments: postAttachments,
+    postText: postText
 };
