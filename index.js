@@ -96,10 +96,11 @@ if (settings.upvote) {
                     ""
                 );
     
-                await discordApi.postAttachments(
-                    settings.discord.artfridge,
-                    attachments
-                );
+                if (attachments.length > 0)
+                    await discordApi.postAttachments(
+                        settings.discord.artfridge,
+                        attachments
+                    );
     
                 await databaseApi.postToFridge(message.id, message.guild.id);
             }
