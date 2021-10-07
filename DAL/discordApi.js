@@ -1,5 +1,13 @@
 const DiscordApi = require('discord.js');
-const discord = new DiscordApi.Client({ partials: ['MESSAGE', 'CHANNEL', 'REACTION'] });
+
+const discord = new DiscordApi.Client({ 
+    intents: [
+        DiscordApi.Intents.FLAGS.GUILDS,
+        DiscordApi.Intents.FLAGS.GUILD_MESSAGES
+    ], 
+    partials: ['MESSAGE', 'CHANNEL', 'REACTION'] 
+});
+
 const token = require('../discord.json').token;
 const thisGuild = require('../settings.json').guild;
 
@@ -102,7 +110,7 @@ async function getMessageHistory(
     channelId = "",
     limit = 10) {
 
-    var channel = discord.channels.cache.get(channelId);
+    var channel = discord.channels.fetch(channelId);
     
     var lastMessages = (await channel.messages.fetch({ limit: limit })).first(10);
 
@@ -172,8 +180,10 @@ async function postRedditToDiscord(
 
     // post the content
     try {
-        var message = await discord.channels.cache.get(channelId).send({
-            embed: {
+        var channel = await discord.channels.fetch(channelId);
+        
+        var message = await channel.send({
+            embeds: [{
                 title: title,
                 description: text,
                 url: link,
@@ -191,7 +201,7 @@ async function postRedditToDiscord(
                     //icon_url: flairIcon,
                     text: flairText
                 }
-            }
+            }]
         });
 
         // @ts-ignore
@@ -204,7 +214,9 @@ async function postRedditToDiscord(
 async function postAttachments(channelId = "", attachments = []) {
     // post the content
     try {
-        var message = await discord.channels.cache.get(channelId).send({
+        var channel = await discord.channels.fetch(channelId);
+        
+        var message = await channel.send({
             files: attachments
         });
 
@@ -218,7 +230,9 @@ async function postAttachments(channelId = "", attachments = []) {
 async function postText(channelId = "", text = "") {
     // post the content
     try {
-        var message = await discord.channels.cache.get(channelId).send(text);
+        var channel = await discord.channels.fetch(channelId);
+        
+        var message = await channel.send(text);
 
         // @ts-ignore
         return message.id;
@@ -252,7 +266,9 @@ async function rateLimit(channelId = "") {
     try {
         var item = rateLimitMessages[Math.floor(Math.random() * rateLimitMessages.length)];
 
-        await discord.channels.cache.get(channelId).send(item);
+        var channel = await discord.channels.fetch(channelId);
+        
+        await channel.send(item);
     } catch (err) {
         console.log("Error ratelimit to channel: " + channelId);
     }
@@ -264,8 +280,10 @@ async function rateLimit(channelId = "") {
  */
 async function postHelp(channelId = "") {
     try {
-        await discord.channels.cache.get(channelId).send({
-            embed: {
+        var channel = await discord.channels.fetch(channelId);
+        
+        await channel.send({
+            embeds: [{
                 title: "Commands and usage",
                 description: 
                     "This bot is designed to pull in new posts from the subreddit automatically every minute. " +
@@ -274,7 +292,7 @@ async function postHelp(channelId = "") {
                     "__**Commands**__\n" + 
                     "- **get random** Pulls in a random submission from the subreddit.\n\n" +
                     "[Source Code](https://github.com/shatindle/rsplatoon-crosspost)"
-            }
+            }]
         });
     } catch (err) {
         console.log("Error sending help to channel: " + channelId);
@@ -307,7 +325,7 @@ function registerSlashCommand(name = "", description = "", responseCallback = on
 /** 
  * @description Listens for messages it is mentioned in so it can respond
  */
-discord.on('message', async message => {
+discord.on('messageCreate', async message => {
     // ignore direct messages
     if (!message.guild) return;
 
