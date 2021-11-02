@@ -60,6 +60,11 @@ discordApi.onMessage(async (message) => {
             redditPost.postedOn,
             redditPost.flairText,
             redditPost.flairIcon);
+    } else if (text.indexOf("paruko fan") > -1) {
+        if (await discordApi.toggleColorRoles(settings.colorRoles, message.author.id))
+            await message.reply("You are now a Paruko Fan");
+        else 
+            await message.reply("You are no longer a Paruko Fan");
     } else {
         await discordApi.postHelp(message.channel.id);
     }
@@ -207,6 +212,25 @@ function timeDiffMinutes(earlyDate, lateDate) {
     return Math.abs(Math.round(diff));
 }
 
+const roles = settings.colorRoles;
+const roleColors = settings.colors;
+
+async function changeRoleColors() {
+    if (roles && roleColors && roles.length && roleColors.length) {
+        // change all the role colors
+        for (var i = 0; i < roles.length; i++) {
+            try {
+                var role = roles[i];
+                var color =  roleColors[Math.floor(Math.random()*roleColors.length)];
+
+                await discordApi.changeRoleColor(role, color);
+            } catch (err) {
+                // if this fails, keep going
+            }
+        }
+    }
+}
+
 /** @description Get process the subreddit and post new posts to Discord
  * 
  */
@@ -297,3 +321,6 @@ async function getNewPosts() {
 // run on startup, then run once per minute
 getNewPosts();
 var interval = setInterval(getNewPosts, 60000);
+
+changeRoleColors();
+var interval2 = setInterval(changeRoleColors, 30000);

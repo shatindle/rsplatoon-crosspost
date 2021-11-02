@@ -292,11 +292,47 @@ async function postHelp(channelId = "") {
                     "by mentioning the bot.\n\n" + 
                     "__**Commands**__\n" + 
                     "- **get random** Pulls in a random submission from the subreddit.\n\n" +
+                    "- **paruko fan** Adds the Paruko Fan role (does not affect existing fan roles).\n\n" +
                     "[Source Code](https://github.com/shatindle/rsplatoon-crosspost)"
             }]
         });
     } catch (err) {
         console.log("Error sending help to channel: " + channelId);
+    }
+}
+
+/**
+ * @description Sets the color of a role by it's ID
+ * @param {string} roleId 
+ * @param {string} colorHex 
+ */
+async function changeRoleColor(roleId, colorHex) {
+    var guild = discord.guilds.cache.get(thisGuild);
+    var role = guild.roles.cache.get(roleId);
+    await role.setColor("#" + colorHex);
+}
+
+/**
+ * @description Toggle a set of roles (will only assign one randomly)
+ * @param {Array<string>} roles 
+ * @param {string} userId 
+ */
+async function toggleColorRoles(roles, userId) {
+    var guild = discord.guilds.cache.get(thisGuild);
+    var member = await guild.members.fetch({
+        user: userId,
+        force: true
+    });
+
+    var hasRole = member.roles.cache.some(t=> roles.includes(t.id));
+
+    if (hasRole) {
+        // remove the roles
+        await member.roles.remove(roles);
+        return false;
+    } else {
+        await member.roles.add(roles[Math.floor(Math.random()*roles.length)]);
+        return true;
     }
 }
 
@@ -464,5 +500,7 @@ module.exports = {
     onReady: onReady,
     onReaction: onReaction,
     postAttachments: postAttachments,
-    postText: postText
+    postText: postText,
+    changeRoleColor: changeRoleColor,
+    toggleColorRoles: toggleColorRoles
 };
