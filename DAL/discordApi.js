@@ -373,7 +373,8 @@ discord.on('messageCreate', async message => {
     if (!message.mentions.has(discord.user)) return;
 
     // ignore replies
-    if (message.content.indexOf('<@!' + discord.user.id + '>') < 0) return;
+    if (message.content.indexOf('<@!' + discord.user.id + '>') < 0 && 
+        message.content.indexOf('<@' + discord.user.id + '>') < 0) return;
 
     for (var i = 0; i < messageCallbacks.length; i++) {
         try {
