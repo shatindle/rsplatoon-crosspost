@@ -322,5 +322,5 @@ async function getNewPosts() {
 getNewPosts();
 var interval = setInterval(getNewPosts, 60000);
 
-changeRoleColors();
-var interval2 = setInterval(changeRoleColors, 30000);
+// changeRoleColors();
+// var interval2 = setInterval(changeRoleColors, 30000);
