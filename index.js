@@ -319,8 +319,9 @@ async function getNewPosts() {
 }
 
 // run on startup, then run once per minute
-getNewPosts();
+setTimeout(getNewPosts, 6000);
 var interval = setInterval(getNewPosts, 60000);
 
 // changeRoleColors();
-// var interval2 = setInterval(changeRoleColors, 30000);
+setTimeout(changeRoleColors, 5000);
+var interval2 = setInterval(changeRoleColors, 86400000);
