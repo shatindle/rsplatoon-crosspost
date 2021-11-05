@@ -1,4 +1,7 @@
 const DiscordApi = require('discord.js');
+const { SlashCommandBuilder } = require("@discordjs/builders");
+const { REST } = require('@discordjs/rest');
+const { Routes } = require('discord-api-types/v9');
 
 const discord = new DiscordApi.Client({ 
     intents: [
@@ -9,7 +12,7 @@ const discord = new DiscordApi.Client({
     partials: ['MESSAGE', 'CHANNEL', 'REACTION'] 
 });
 
-const token = require('../discord.json').token;
+const { token, clientId } = require('../discord.json');
 const thisGuild = require('../settings.json').guild;
 
 
@@ -165,7 +168,8 @@ async function postRedditToDiscord(
     color = 0, 
     timestamp = 0, 
     flairText = "", 
-    flairIcon = "") {
+    flairIcon = "", 
+    interaction = null) {
 
     // handle discord links
     var discordLinkPattern = /(https?:\/\/)?(www\.)?(discord\.(gg|io|me|li|com)|discordapp\.com\/invite)\/[a-zA-Z0-9_.-]+/g;
@@ -180,35 +184,43 @@ async function postRedditToDiscord(
         title = title.substring(0, 250) + "...";
 
     // post the content
-    try {
-        var channel = await discord.channels.fetch(channelId);
-        
-        var message = await channel.send({
-            embeds: [{
-                title: title,
-                description: text,
-                url: link,
-                color: color,
-                thumbnail: {
-                    url: imageUrl
-                },
-                timestamp: new Date(timestamp * 1000).toISOString(),
-                author: {
-                    name: author,
-                    url: author.substring(0, 2) === "u/" ? "https://reddit.com/user/" + author.substring(2) : null,
-                    icon_url: authorIcon ? authorIcon : null
-                },
-                footer: {
-                    //icon_url: flairIcon,
-                    text: flairText
-                }
-            }]
-        });
-
-        // @ts-ignore
-        return message.id;
-    } catch (err) {
-        console.log("offending link: " + imageUrl);
+    var contentToSend = {
+        embeds: [{
+            title: title,
+            description: text,
+            url: link,
+            color: color,
+            thumbnail: {
+                url: imageUrl
+            },
+            timestamp: new Date(timestamp * 1000).toISOString(),
+            author: {
+                name: author,
+                url: author.substring(0, 2) === "u/" ? "https://reddit.com/user/" + author.substring(2) : null,
+                icon_url: authorIcon ? authorIcon : null
+            },
+            footer: {
+                //icon_url: flairIcon,
+                text: flairText
+            }
+        }]
+    };
+    if (interaction === null) {
+        // respond with a regular message
+        try {
+            var channel = await discord.channels.fetch(channelId);
+            
+            var message = await channel.send(contentToSend);
+    
+            // @ts-ignore
+            return message.id;
+        } catch (err) {
+            console.log("offending link: " + imageUrl);
+        }
+    } else {
+        // this is sending an interaction
+        // respond directly to the interaction
+        await interaction.editReply(contentToSend);
     }
 }
 
@@ -263,13 +275,18 @@ const rateLimitMessages = [
  * @description Tells the user to slow down
  * @param {string} channelId 
  */
-async function rateLimit(channelId = "") {
+async function rateLimit(channelId = "", interaction = null) {
     try {
         var item = rateLimitMessages[Math.floor(Math.random() * rateLimitMessages.length)];
 
-        var channel = await discord.channels.fetch(channelId);
+        if (interaction) {
+            await interaction.editReply(item);
+        } else {
+            var channel = await discord.channels.fetch(channelId);
         
-        await channel.send(item);
+            await channel.send(item);
+        }
+        
     } catch (err) {
         console.log("Error ratelimit to channel: " + channelId);
     }
@@ -337,26 +354,132 @@ async function toggleColorRoles(roles, userId) {
 }
 
 /**
+ * @description Remove a set of roles
+ * @param {Array<string>} roles 
+ * @param {string} userId 
+ * @returns 
+ */
+async function removeColorRoles(roles, userId) {
+    var guild = discord.guilds.cache.get(thisGuild);
+    var member = await guild.members.fetch({
+        user: userId,
+        force: true
+    });
+
+    var hasRole = member.roles.cache.some(t=> roles.includes(t.id));
+
+    if (hasRole) {
+        // remove the roles
+        await member.roles.remove(roles);
+        return false;
+    }
+}
+
+const commands = [];
+
+/**
  * @description Registers a slash command for the bot (only needs to be run once)
  * @param {string} name The slash command name
  * @param {string} description User friendly description of the slash command
+ * @param {Array<Object>} parameters [{ name: "", type: "", description: "", required: bool, choices: [] }]
+ * @param {Function} responseCallback A callback function that will be given the interaction
  */
-function registerSlashCommand(name = "", description = "", responseCallback = onInteractionCallback) {
+function addSlashCommand(name = "", description = "", parameters = [], responseCallback = onInteractionCallback) {
     if (interactionCallbacks[name])
         throw "Only one interaction register is allowed per slash command";
 
     // for backwards compatibility
     if (!thisGuild)
         return;
-    
-    discord.api.applications(discord.user.id).guilds(thisGuild).commands.post({
-        data: {
-            name: name,
-            description: description
+
+    if (!name || !description)
+        throw "Name and description are required for registering a function";
+
+    var data = new SlashCommandBuilder()
+        .setName(name)
+        .setDescription(description);
+
+    if (parameters && parameters.length) {
+        for (var i = 0; i < parameters.length; i++) {
+            if (parameters[i].name && parameters[i].type && parameters[i].description) {
+                var opt = function (option) {
+                    option.setName(parameters[i].name);
+                    option.setDescription(parameters[i].description);
+
+                    if (parameters[i].required)
+                        option.setRequired(true);
+
+                    if (parameters[i].choices && parameters[i].choices.length) {
+                        for (var x = 0; x < parameters[i].choices.length; x++) {
+                            if (parameters[i].choices[x].name && parameters[i].choices[x].value)
+                                option.addChoice(parameters[i].choices[x].name, parameters[i].choices[x].value);
+                            else if (parameters[i].choices[x].name)
+                                option.addChoice(parameters[i].choices[x].name, parameters[i].choices[x].name);
+                            else if (parameters[i].choices[x].value)
+                                option.addChoice(parameters[i].choices[x].value, parameters[i].choices[x].value);
+                            else 
+                                throw "Missing choices";
+                        }
+                    }
+
+                    return option;
+                };
+
+                switch (parameters[i].type) {
+                    case "bool": 
+                    case "boolean": 
+                        data.addBooleanOption(opt);
+                        break;
+                    case "channel":
+                        data.addChannelOption(opt);
+                        break;
+                    case "int":
+                    case "integer":
+                        data.addIntegerOption(opt);
+                        break;
+                    case "mention":
+                    case "mentionable":
+                        data.addMentionableOption(opt);
+                        break;
+                    case "number":
+                    case "num":
+                        data.addNumberOption(opt);
+                        break;
+                    case "role":
+                        data.addRoleOption(opt);
+                        break;
+                    case "string":
+                    case "str":
+                        data.addStringOption(opt);
+                        break;
+                    case "user":
+                        data.addUserOption(opt);
+
+                }
+            } else {
+                throw "Missing required parameters";
+            }
         }
-    });
+    }
+
+    commands.push(data.toJSON());
 
     interactionCallbacks[name] = responseCallback;
+}
+
+var alreadyRun = false;
+
+async function registerSlashCommands() {
+    if (alreadyRun)
+        throw "Registration of commands has already happened";
+
+    alreadyRun = true;
+
+    const rest = new REST({ version: '9' }).setToken(token);
+
+    await rest.put(Routes.applicationGuildCommands(clientId, thisGuild), { body: commands });
+
+    console.log("commands registered");
 }
 
 /** 
@@ -434,31 +557,19 @@ discord.on('messageDelete', async message => {
 });
 
 // handle slash commands
-discord.ws.on('INTERACTION_CREATE', async interaction => {
+discord.on('interactionCreate', async interaction => {
+    if (!interaction.isCommand()) return;
+
     try {
-        var responseCallbacks = interactionCallbacks[interaction.data.name];
+        var responseCallbacks = interactionCallbacks[interaction.commandName];
 
         if (!responseCallbacks) {
-            discord.api.interactions(interaction.id, interaction.token).callback.post({
-                data: {
-                    type: 4,
-                    data: {
-                        content: 'Error: Unknown command issued'
-                    }
-                }
-            });
+            await interaction.reply("Error: Unknown command issued");
             return;
         }
 
         // respond with a pong
-        discord.api.interactions(interaction.id, interaction.token).callback.post({
-            data: {
-                type: 4,
-                data: {
-                    content: 'Digging through reddit...'
-                }
-            }
-        });
+        await interaction.deferReply();
 
         await responseCallbacks(interaction);
     } catch { }
@@ -497,11 +608,13 @@ module.exports = {
     onMessage: onMessage,
     postHelp: postHelp,
     rateLimit: rateLimit,
-    registerSlashCommand: registerSlashCommand,
+    addSlashCommand: addSlashCommand,
+    registerSlashCommands: registerSlashCommands,
     onReady: onReady,
     onReaction: onReaction,
     postAttachments: postAttachments,
     postText: postText,
     changeRoleColor: changeRoleColor,
-    toggleColorRoles: toggleColorRoles
+    toggleColorRoles: toggleColorRoles,
+    removeColorRoles: removeColorRoles
 };

@@ -4,6 +4,13 @@ const database = require("./DAL/databaseApi");
 const databaseApi = require("./DAL/databaseApi");
 const settings = require("./settings.json");
 
+const roles = settings.colorRoles;
+const roleColors = settings.colors;
+const inkRoles = settings.inkColorRoles;
+const inkRoleColors = settings.inkColors;
+
+const allRoles = roles.concat(inkRoles);
+
 // test subreddit
 const subReddit = settings.subReddit;
 
@@ -31,44 +38,45 @@ var lastMessageTimestamp = null;
 /** @description When a user posts a message in Discord that pings the bot, respond.
  * 
  */
-discordApi.onMessage(async (message) => { 
-    var text = message.content.toLocaleLowerCase();
+// TODO: remove this deprecated function
+// discordApi.onMessage(async (message) => { 
+//     var text = message.content.toLocaleLowerCase();
 
-    if (text.indexOf("get random") > -1) {
-        // check for ratelimit
-        var postedOn = new Date(message.createdTimestamp);
+//     if (text.indexOf("get random") > -1) {
+//         // check for ratelimit
+//         var postedOn = new Date(message.createdTimestamp);
 
-        if (lastMessageTimestamp !== null && Math.abs(postedOn - lastMessageTimestamp) < 5000)
-            return await discordApi.rateLimit(message.channel.id);
+//         if (lastMessageTimestamp !== null && Math.abs(postedOn - lastMessageTimestamp) < 5000)
+//             return await discordApi.rateLimit(message.channel.id);
 
-        lastMessageTimestamp = postedOn;
+//         lastMessageTimestamp = postedOn;
 
-        // get a random post
-        var posts = await redditApi.getRandomPost(subReddit);
+//         // get a random post
+//         var posts = await redditApi.getRandomPost(subReddit);
 
-        var redditPost = posts[0];
+//         var redditPost = posts[0];
 
-        await discordApi.postRedditToDiscord(
-            message.channel.id, 
-            redditPost.title, 
-            redditPost.text, 
-            redditPost.image, 
-            redditPost.link, 
-            redditPost.author, 
-            redditPost.authorIcon,
-            redditPost.color,
-            redditPost.postedOn,
-            redditPost.flairText,
-            redditPost.flairIcon);
-    } else if (text.indexOf("paruko fan") > -1) {
-        if (await discordApi.toggleColorRoles(settings.colorRoles, message.author.id))
-            await message.reply("You are now a Paruko Fan");
-        else 
-            await message.reply("You are no longer a Paruko Fan");
-    } else {
-        await discordApi.postHelp(message.channel.id);
-    }
-});
+//         await discordApi.postRedditToDiscord(
+//             message.channel.id, 
+//             redditPost.title, 
+//             redditPost.text, 
+//             redditPost.image, 
+//             redditPost.link, 
+//             redditPost.author, 
+//             redditPost.authorIcon,
+//             redditPost.color,
+//             redditPost.postedOn,
+//             redditPost.flairText,
+//             redditPost.flairIcon);
+//     } else if (text.indexOf("paruko fan") > -1) {
+//         if (await discordApi.toggleColorRoles(settings.colorRoles, interaction.member.id))
+//             await message.reply("You are now a Paruko Fan");
+//         else 
+//             await message.reply("You are no longer a Paruko Fan");
+//     } else {
+//         await discordApi.postHelp(message.channel.id);
+//     }
+// });
 
 if (settings.upvote) {
     discordApi.onReaction(async function(reaction, user) {
@@ -143,15 +151,17 @@ if (settings.upvote) {
 }
 
 discordApi.onReady(() => {
-    discordApi.registerSlashCommand(
+    discordApi.addSlashCommand(
         "random", 
         "Pulls in a random submission from the subreddit.", 
+        [],
         async (interaction) => {
             // check for ratelimit
             var postedOn = new Date();
     
-            if (lastMessageTimestamp !== null && Math.abs(postedOn - lastMessageTimestamp) < 5000)
-                return await discordApi.rateLimit(interaction.channel_id);
+            if (lastMessageTimestamp !== null && Math.abs(postedOn - lastMessageTimestamp) < 5000) {
+                return await discordApi.rateLimit(interaction.channel_id, interaction);
+            }
     
             lastMessageTimestamp = postedOn;
     
@@ -171,9 +181,90 @@ discordApi.onReady(() => {
                 redditPost.color,
                 redditPost.postedOn,
                 redditPost.flairText,
-                redditPost.flairIcon);
+                redditPost.flairIcon,
+                interaction);
         }
     );
+
+    discordApi.addSlashCommand(
+        "paruko",
+        "The Paruko Fan gumball machine! Use it to get a Paruko color. Color changes daily.",
+        [{
+            name: "action",
+            type: "string",
+            description: "Use the gumball machine or remove the role",
+            choices: [
+                {
+                    name: "Gumball",
+                    value: "gumball"
+                }, {
+                    name: "Remove",
+                    value: "remove"
+                }
+            ]
+        }],
+        async (interaction) => {
+            var action = interaction.options.getString("action");
+
+            if (action === "gumball") {
+                await discordApi.removeColorRoles(allRoles, interaction.member.id);
+                await discordApi.toggleColorRoles(roles, interaction.member.id);
+
+                interaction.editReply("You've got a new Paruko Fan role!");
+            } else if (action === "remove") {
+                await discordApi.removeColorRoles(allRoles, interaction.member.id);
+
+                interaction.editReply("You are no longer a Paruko Fan.");
+            } else {
+                interaction.editReply("Do /paruko Gumball to become a fan or do /paruko Remove to remove the role.")
+            }
+        }
+    );
+
+    discordApi.addSlashCommand(
+        "choose",
+        "Join Team Alpha, Team Bravo, or leave the team.  Role colors change daily.",
+        [{
+            name: "team",
+            type: "string",
+            description: "Use the gumball machine or remove the role",
+            choices: [
+                {
+                    name: "Alpha",
+                    value: "alpha"
+                }, {
+                    name: "Bravo",
+                    value: "bravo"
+                }, {
+                    name: "Leave",
+                    value: "leave"
+                }
+            ],
+            required: true
+        }],
+        async (interaction) => {
+            var team = interaction.options.getString("team");
+
+            switch (team) {
+                case "alpha":
+                    await discordApi.removeColorRoles(allRoles, interaction.member.id);
+                    await discordApi.toggleColorRoles([inkRoles[0]], interaction.member.id);
+                    await interaction.editReply("You've joined the Alpha Team!");
+                    break;
+                case "bravo":
+                    await discordApi.removeColorRoles(allRoles, interaction.member.id);
+                    await discordApi.toggleColorRoles([inkRoles[1]], interaction.member.id);
+                    await interaction.editReply("You've joined the Bravo Team!");
+                    break;
+                case "leave":
+                    await discordApi.removeColorRoles(allRoles, interaction.member.id);
+                    await interaction.editReply("You've left the team!");
+                    break;
+            }
+        }
+    )
+
+    discordApi.registerSlashCommands();
 });
 
 const artFlair = [
@@ -212,10 +303,18 @@ function timeDiffMinutes(earlyDate, lateDate) {
     return Math.abs(Math.round(diff));
 }
 
-const roles = settings.colorRoles;
-const roleColors = settings.colors;
+function colorOffset() {
+    var now = new Date();
+    var fullDaysSinceEpoch = Math.floor(now/8.64e7);
+
+    if (inkRoleColors && inkRoleColors.length)
+        return fullDaysSinceEpoch % (inkRoleColors.length * 2);
+
+    return 0;
+}
 
 async function changeRoleColors() {
+    // change Paruko Fan role colors
     if (roles && roleColors && roles.length && roleColors.length) {
         // change all the role colors
         for (var i = 0; i < roles.length; i++) {
@@ -228,6 +327,27 @@ async function changeRoleColors() {
                 // if this fails, keep going
             }
         }
+    }
+
+    // change ink role colors
+    try {
+        if (inkRoles && inkRoleColors && inkRoles.length === 2 && inkRoleColors.length) {
+            var todaysColorPairs = colorOffset();
+    
+            if (inkRoleColors.length * 2 > todaysColorPairs) {
+                if (todaysColorPairs < inkRoleColors.length) {
+                    // do pairs in current order
+                    await discordApi.changeRoleColor(inkRoles[0], inkRoleColors[todaysColorPairs][0]);
+                    await discordApi.changeRoleColor(inkRoles[1], inkRoleColors[todaysColorPairs][1]);
+                } else {
+                    // reverse the order and subtract length
+                    await discordApi.changeRoleColor(inkRoles[0], inkRoleColors[todaysColorPairs - inkRoleColors.length][1]);
+                    await discordApi.changeRoleColor(inkRoles[1], inkRoleColors[todaysColorPairs - inkRoleColors.length][0]);
+                }
+            }
+        }
+    } catch (err) {
+        // if this fails, keep going
     }
 }
 
