@@ -367,7 +367,7 @@ async function addColorRoles(roles, userId, rolesToRemove = null) {
 
     if (rolesToRemove)
         await member.roles.remove(rolesToRemove);
-        
+
     await member.roles.add(roles[Math.floor(Math.random()*roles.length)]);
 }
 
@@ -396,8 +396,8 @@ const commands = [];
  * @param {Array<Object>} parameters [{ name: "", type: "", description: "", required: bool, choices: [] }]
  * @param {Function} responseCallback A callback function that will be given the interaction
  */
-function addSlashCommand(name = "", description = "", parameters = [], responseCallback = onInteractionCallback) {
-    if (interactionCallbacks[name])
+function addSlashCommand(name = "", description = "", parameters = [], responseCallback = onInteractionCallback, subcommand = false) {
+    if (interactionCallbacks[name] && !subcommand)
         throw "Only one interaction register is allowed per slash command";
 
     // for backwards compatibility
@@ -407,66 +407,39 @@ function addSlashCommand(name = "", description = "", parameters = [], responseC
     if (!name || !description)
         throw "Name and description are required for registering a function";
 
-    var data = new SlashCommandBuilder()
-        .setName(name)
+    var data = new SlashCommandBuilder();
+
+    createCommand(data, name, description, parameters);
+
+    commands.push(data.toJSON());
+
+    interactionCallbacks[name] = responseCallback;
+}
+
+/**
+ * 
+ * @param {SlashCommandBuilder} data The command builder to attach to
+ * @param {String} name The name of the command or sub command
+ * @param {String} description The name of the command description
+ * @param {Array<Object>} parameters  [{ name: "", type: "", description: "", required: bool, choices: [] }]
+ */
+function createCommand(data, name, description, parameters) {
+    data.setName(name)
         .setDescription(description);
 
     if (parameters && parameters.length) {
         for (var i = 0; i < parameters.length; i++) {
-            if (parameters[i].name && parameters[i].type && parameters[i].description) {
-                var opt = function (option) {
-                    option.setName(parameters[i].name);
-                    option.setDescription(parameters[i].description);
-
-                    if (parameters[i].required)
-                        option.setRequired(true);
-
-                    if (parameters[i].choices && parameters[i].choices.length) {
-                        for (var x = 0; x < parameters[i].choices.length; x++) {
-                            if (parameters[i].choices[x].name && parameters[i].choices[x].value)
-                                option.addChoice(parameters[i].choices[x].name, parameters[i].choices[x].value);
-                            else if (parameters[i].choices[x].name)
-                                option.addChoice(parameters[i].choices[x].name, parameters[i].choices[x].name);
-                            else if (parameters[i].choices[x].value)
-                                option.addChoice(parameters[i].choices[x].value, parameters[i].choices[x].value);
-                            else 
-                                throw "Missing choices";
-                        }
-                    }
-
-                    return option;
-                };
-
-                switch (parameters[i].type) {
-                    case "bool": 
-                    case "boolean": 
-                        data.addBooleanOption(opt);
-                        break;
-                    case "channel":
-                        data.addChannelOption(opt);
-                        break;
-                    case "int":
-                    case "integer":
-                        data.addIntegerOption(opt);
-                        break;
-                    case "mention":
-                    case "mentionable":
-                        data.addMentionableOption(opt);
-                        break;
-                    case "number":
-                    case "num":
-                        data.addNumberOption(opt);
-                        break;
-                    case "role":
-                        data.addRoleOption(opt);
-                        break;
-                    case "string":
-                    case "str":
-                        data.addStringOption(opt);
-                        break;
-                    case "user":
-                        data.addUserOption(opt);
-
+            if (parameters[i].name && (parameters[i].type || parameters[i].subcommand) && parameters[i].description) {
+                if (parameters[i].subcommand) {
+                    data.addSubcommand(subcommand => {
+                        return createCommand(
+                            subcommand, 
+                            parameters[i].name, 
+                            parameters[i].description, 
+                            parameters[i].parameters);
+                    })
+                } else {
+                    addParameters(parameters[i], data);
                 }
             } else {
                 throw "Missing required parameters";
@@ -474,9 +447,69 @@ function addSlashCommand(name = "", description = "", parameters = [], responseC
         }
     }
 
-    commands.push(data.toJSON());
+    return data;
+}
 
-    interactionCallbacks[name] = responseCallback;
+/**
+ * 
+ * @param {Array<Object>} parameter The parameter to add
+ * @param {SlashCommandBuilder} data The command to add the parameter to
+ */
+function addParameters(parameter, data) {
+    var opt = function (option) {
+        option.setName(parameter.name);
+        option.setDescription(parameter.description);
+
+        if (parameter.required)
+            option.setRequired(true);
+
+        if (parameter.choices && parameter.choices.length) {
+            for (var x = 0; x < parameter.choices.length; x++) {
+                if (parameter.choices[x].name && parameter.choices[x].value)
+                    option.addChoice(parameter.choices[x].name, parameter.choices[x].value);
+                else if (parameter.choices[x].name)
+                    option.addChoice(parameter.choices[x].name, parameter.choices[x].name);
+                else if (parameter.choices[x].value)
+                    option.addChoice(parameter.choices[x].value, parameter.choices[x].value);
+                else 
+                    throw "Missing choices";
+            }
+        }
+
+        return option;
+    };
+
+    switch (parameter.type) {
+        case "bool": 
+        case "boolean": 
+            data.addBooleanOption(opt);
+            break;
+        case "channel":
+            data.addChannelOption(opt);
+            break;
+        case "int":
+        case "integer":
+            data.addIntegerOption(opt);
+            break;
+        case "mention":
+        case "mentionable":
+            data.addMentionableOption(opt);
+            break;
+        case "number":
+        case "num":
+            data.addNumberOption(opt);
+            break;
+        case "role":
+            data.addRoleOption(opt);
+            break;
+        case "string":
+        case "str":
+            data.addStringOption(opt);
+            break;
+        case "user":
+            data.addUserOption(opt);
+
+    }
 }
 
 var alreadyRun = false;

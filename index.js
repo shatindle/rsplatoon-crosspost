@@ -2,6 +2,7 @@ const discordApi = require("./DAL/discordApi");
 const redditApi = require("./DAL/redditApi");
 const database = require("./DAL/databaseApi");
 const databaseApi = require("./DAL/databaseApi");
+const profileApi = require("./DAL/profileApi");
 const settings = require("./settings.json");
 
 const roles = settings.colorRoles;
@@ -179,16 +180,15 @@ discordApi.onReady(() => {
         async (interaction) => {
             var action = interaction.options.getString("action");
 
-            if (action === "gumball") {
-                await discordApi.addColorRoles(roles, interaction.member.id, everyRole);
-
-                interaction.editReply("You've got a new Paruko Fan role!");
-            } else if (action === "remove") {
-                await discordApi.removeColorRoles(allRoles, interaction.member.id);
-
-                interaction.editReply("You are no longer a Paruko Fan.");
-            } else {
-                interaction.editReply("Do /paruko Gumball to become a fan or do /paruko Remove to remove the role.")
+            switch (action) {
+                case "gumball":
+                    await discordApi.addColorRoles(roles, interaction.member.id, everyRole);
+                    interaction.editReply("You've got a new Paruko Fan role!");
+                    break;
+                case "remove":
+                    await discordApi.removeColorRoles(allRoles, interaction.member.id);
+                    interaction.editReply("You are no longer a Paruko Fan.");
+                    break;
             }
         }
     );
@@ -230,6 +230,80 @@ discordApi.onReady(() => {
                     await discordApi.removeColorRoles(allRoles, interaction.member.id);
                     await interaction.editReply("You've left the team!");
                     break;
+            }
+        }
+    );
+
+    discordApi.addSlashCommand(
+        "profile",
+        "Manage your profile!  Take your link with you wherever you go!  It even works outside of Discord.",
+        [{
+            subcommand: true,
+            name: "edit",
+            description: "Edit your profile",
+            parameters: [{
+                name: "part",
+                type: "string",
+                description: "Change a part of your profile",
+                choices: [
+                    {
+                        name: "Friend Code",
+                        value: "friendcode"
+                    },
+                ],
+                required: true
+            }, {
+                name: "value",
+                type: "string",
+                description: "The updated value",
+                required: true
+            }]
+        }, {
+            name: "get",
+            description: "Get another user's profile",
+            subcommand: true,
+            parameters: [{
+                name: "user",
+                type: "user",
+                description: "The user for the profile lookup",
+                required: true
+            }]
+        }, {
+            name: "me",
+            description: "Get your own profile",
+            subcommand: true
+        }], 
+        async (interaction) => {
+            var subcommand = interaction.options._subcommand;
+
+            if (subcommand === "edit") {
+                const part = interaction.options.getString("part");
+                const value = interaction.options.getString("value");
+
+                if (part === "friendcode") {
+                    var response = await profileApi.setProfile(interaction.member.id, value);
+
+                    if (response.result === "updated")
+                        await interaction.editReply("Updated friend code");
+                    else if (response.result)
+                        await interaction.editReply("Error updating friend code: " + response.result);
+                    else 
+                        await interaction.editReply("Error updating friend code: unknown error");
+                }
+            } else {
+                var userToLookup = interaction.member.id;
+
+                var otherUser = interaction.options.getUser("user");
+
+                if (otherUser)
+                    userToLookup = otherUser.id;
+
+                var response = await profileApi.getProfile(userToLookup);
+
+                if (response.friendCode)
+                    await interaction.editReply("**Friend code:** \n" + response.friendCode + (response.profileId ? "\n\n**Full Profile**: \n" + settings.profile.url + settings.profile.get + "/" + response.profileId + "?_v=" + new Date().valueOf() : ""));
+                else 
+                    await interaction.editReply("Friend code not set");
             }
         }
     )
@@ -414,5 +488,5 @@ setTimeout(getNewPosts, 6000);
 var interval = setInterval(getNewPosts, 60000);
 
 // changeRoleColors();
-setTimeout(changeRoleColors, 5000);
-var interval2 = setInterval(changeRoleColors, 86400000);
+// setTimeout(changeRoleColors, 5000);
+// var interval2 = setInterval(changeRoleColors, 86400000);
