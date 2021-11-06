@@ -492,12 +492,12 @@ async function cleanUp() {
 }
 
 // run on startup, then run once per minute
-// setTimeout(getNewPosts, 6000);
-// var interval = setInterval(getNewPosts, 60000);
+setTimeout(getNewPosts, 6000);
+var interval = setInterval(getNewPosts, 60000);
 
-// // changeRoleColors();
-// setTimeout(changeRoleColors, 5000);
-// var interval2 = setInterval(changeRoleColors, 86400000);
+// changeRoleColors();
+setTimeout(changeRoleColors, 5000);
+var interval2 = setInterval(changeRoleColors, 86400000);
 
 setTimeout(cleanUp, 5000);
 var interval3 = setInterval(cleanUp, 86400000);
