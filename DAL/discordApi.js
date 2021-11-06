@@ -354,6 +354,26 @@ async function toggleColorRoles(roles, userId) {
 }
 
 /**
+ * @description Add a role from a set of roles
+ * @param {Array<string>} roles 
+ * @param {string} userId 
+ */
+async function addColorRoles(roles, userId) {
+    var guild = discord.guilds.cache.get(thisGuild);
+    var member = await guild.members.fetch({
+        user: userId,
+        force: true
+    });
+
+    var hasRole = member.roles.cache.some(t=> roles.includes(t.id));
+
+    if (!hasRole) {
+        await member.roles.add(roles[Math.floor(Math.random()*roles.length)]);
+        return true;
+    }
+}
+
+/**
  * @description Remove a set of roles
  * @param {Array<string>} roles 
  * @param {string} userId 
@@ -493,11 +513,11 @@ discord.on('messageCreate', async message => {
     if (message.author.bot) return;
 
     // ignore posts we were not mentioned in
-    if (!message.mentions.has(discord.user)) return;
+    // if (!message.mentions.has(discord.user)) return;
 
     // ignore replies
-    if (message.content.indexOf('<@!' + discord.user.id + '>') < 0 && 
-        message.content.indexOf('<@' + discord.user.id + '>') < 0) return;
+    // if (message.content.indexOf('<@!' + discord.user.id + '>') < 0 && 
+    //     message.content.indexOf('<@' + discord.user.id + '>') < 0) return;
 
     for (var i = 0; i < messageCallbacks.length; i++) {
         try {
@@ -616,5 +636,6 @@ module.exports = {
     postText: postText,
     changeRoleColor: changeRoleColor,
     toggleColorRoles: toggleColorRoles,
-    removeColorRoles: removeColorRoles
+    removeColorRoles: removeColorRoles,
+    addColorRoles: addColorRoles
 };

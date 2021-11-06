@@ -8,8 +8,10 @@ const roles = settings.colorRoles;
 const roleColors = settings.colors;
 const inkRoles = settings.inkColorRoles;
 const inkRoleColors = settings.inkColors;
+const unmanagedRoles = settings.unmanagedColorRoles;
 
 const allRoles = roles.concat(inkRoles);
+const everyRole = roles.concat(unmanagedRoles);
 
 // test subreddit
 const subReddit = settings.subReddit;
@@ -35,48 +37,18 @@ discordApi.onDelete(async (messageId, guild, deletedBy) => {
 
 var lastMessageTimestamp = null;
 
-/** @description When a user posts a message in Discord that pings the bot, respond.
- * 
- */
-// TODO: remove this deprecated function
-// discordApi.onMessage(async (message) => { 
-//     var text = message.content.toLocaleLowerCase();
+// TODO: remove this if we change how we manage colormes
+discordApi.onMessage(async (message) => {
+    if (!unmanagedRoles || unmanagedRoles.length === 0)
+        return;
 
-//     if (text.indexOf("get random") > -1) {
-//         // check for ratelimit
-//         var postedOn = new Date(message.createdTimestamp);
+    var text = message.content.toLocaleLowerCase().trim();
 
-//         if (lastMessageTimestamp !== null && Math.abs(postedOn - lastMessageTimestamp) < 5000)
-//             return await discordApi.rateLimit(message.channel.id);
-
-//         lastMessageTimestamp = postedOn;
-
-//         // get a random post
-//         var posts = await redditApi.getRandomPost(subReddit);
-
-//         var redditPost = posts[0];
-
-//         await discordApi.postRedditToDiscord(
-//             message.channel.id, 
-//             redditPost.title, 
-//             redditPost.text, 
-//             redditPost.image, 
-//             redditPost.link, 
-//             redditPost.author, 
-//             redditPost.authorIcon,
-//             redditPost.color,
-//             redditPost.postedOn,
-//             redditPost.flairText,
-//             redditPost.flairIcon);
-//     } else if (text.indexOf("paruko fan") > -1) {
-//         if (await discordApi.toggleColorRoles(settings.colorRoles, interaction.member.id))
-//             await message.reply("You are now a Paruko Fan");
-//         else 
-//             await message.reply("You are no longer a Paruko Fan");
-//     } else {
-//         await discordApi.postHelp(message.channel.id);
-//     }
-// });
+    if (text.indexOf("+colorme ") === 0 || text.indexOf("+colourme ") === 0) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        await discordApi.removeColorRoles(allRoles, message.author.id);
+    }
+});
 
 if (settings.upvote) {
     discordApi.onReaction(async function(reaction, user) {
@@ -201,13 +173,14 @@ discordApi.onReady(() => {
                     name: "Remove",
                     value: "remove"
                 }
-            ]
+            ],
+            required: true
         }],
         async (interaction) => {
             var action = interaction.options.getString("action");
 
             if (action === "gumball") {
-                await discordApi.removeColorRoles(allRoles, interaction.member.id);
+                await discordApi.removeColorRoles(everyRole, interaction.member.id);
                 await discordApi.toggleColorRoles(roles, interaction.member.id);
 
                 interaction.editReply("You've got a new Paruko Fan role!");
@@ -247,13 +220,13 @@ discordApi.onReady(() => {
 
             switch (team) {
                 case "alpha":
-                    await discordApi.removeColorRoles(allRoles, interaction.member.id);
-                    await discordApi.toggleColorRoles([inkRoles[0]], interaction.member.id);
+                    await discordApi.removeColorRoles(everyRole, interaction.member.id);
+                    await discordApi.addColorRoles([inkRoles[0]], interaction.member.id);
                     await interaction.editReply("You've joined the Alpha Team!");
                     break;
                 case "bravo":
-                    await discordApi.removeColorRoles(allRoles, interaction.member.id);
-                    await discordApi.toggleColorRoles([inkRoles[1]], interaction.member.id);
+                    await discordApi.removeColorRoles(everyRole, interaction.member.id);
+                    await discordApi.addColorRoles([inkRoles[1]], interaction.member.id);
                     await interaction.editReply("You've joined the Bravo Team!");
                     break;
                 case "leave":
@@ -315,7 +288,8 @@ function colorOffset() {
 
 async function changeRoleColors() {
     // change Paruko Fan role colors
-    if (roles && roleColors && roles.length && roleColors.length) {
+    // only do this if it's setup and it's Sunday
+    if (roles && roleColors && roles.length && roleColors.length && new Date().getDay() === 0) {
         // change all the role colors
         for (var i = 0; i < roles.length; i++) {
             try {
