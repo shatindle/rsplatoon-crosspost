@@ -74,7 +74,8 @@ async function findByDiscordId(id) {
 async function associateIds(redditId, discordId) {
     var record = {
         discordId: discordId,
-        redditId: redditId
+        redditId: redditId,
+        createdOn: Firestore.Timestamp.now()
     };
     
     await db.collection("associations").add(record);
@@ -85,7 +86,8 @@ async function associateIds(redditId, discordId) {
 async function postToFridge(messageId, guildId) {
     var record = {
         messageId: messageId,
-        guildId: guildId
+        guildId: guildId,
+        createdOn: Firestore.Timestamp.now()
     };
 
     await db.collection("artfridge").doc(guildId + "-" + messageId).set(record);
