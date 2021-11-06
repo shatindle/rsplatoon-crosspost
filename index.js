@@ -11,7 +11,7 @@ const inkRoleColors = settings.inkColors;
 const unmanagedRoles = settings.unmanagedColorRoles;
 
 const allRoles = roles.concat(inkRoles);
-const everyRole = roles.concat(unmanagedRoles);
+const everyRole = allRoles.concat(unmanagedRoles);
 
 // test subreddit
 const subReddit = settings.subReddit;
