@@ -83,6 +83,17 @@ async function associateIds(redditId, discordId) {
     addToCache(record, postCache);
 }
 
+async function cleanupOldAssociations() {
+    // delete documents older than 3 days
+    var date = Date.now() - 3 * 24 * 60 * 60 * 1000;
+
+    var docsToDelete = await db.collection("associations").where("createdOn", "<", date).get();
+
+    docsToDelete.forEach(element => {
+        element.ref.delete();
+    });
+}
+
 async function postToFridge(messageId, guildId) {
     var record = {
         messageId: messageId,
@@ -121,5 +132,6 @@ module.exports = {
     associateIds: associateIds,
     markReported: markReported,
     postToFridge: postToFridge,
-    getArtFromFridge: getArtFromFridge
+    getArtFromFridge: getArtFromFridge,
+    cleanupOldAssociations: cleanupOldAssociations
 };
