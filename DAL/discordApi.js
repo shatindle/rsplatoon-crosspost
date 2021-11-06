@@ -358,13 +358,16 @@ async function toggleColorRoles(roles, userId) {
  * @param {Array<string>} roles 
  * @param {string} userId 
  */
-async function addColorRoles(roles, userId) {
+async function addColorRoles(roles, userId, rolesToRemove = null) {
     var guild = discord.guilds.cache.get(thisGuild);
     var member = await guild.members.fetch({
         user: userId,
         force: true
     });
 
+    if (rolesToRemove)
+        await member.roles.remove(rolesToRemove);
+        
     await member.roles.add(roles[Math.floor(Math.random()*roles.length)]);
 }
 

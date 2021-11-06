@@ -180,9 +180,7 @@ discordApi.onReady(() => {
             var action = interaction.options.getString("action");
 
             if (action === "gumball") {
-                await discordApi.removeColorRoles(everyRole, interaction.member.id);
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                await discordApi.addColorRoles(roles, interaction.member.id);
+                await discordApi.addColorRoles(roles, interaction.member.id, everyRole);
 
                 interaction.editReply("You've got a new Paruko Fan role!");
             } else if (action === "remove") {
@@ -221,15 +219,11 @@ discordApi.onReady(() => {
 
             switch (team) {
                 case "alpha":
-                    await discordApi.removeColorRoles(everyRole, interaction.member.id);
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                    await discordApi.addColorRoles([inkRoles[0]], interaction.member.id);
+                    await discordApi.addColorRoles([inkRoles[0]], interaction.member.id, everyRole);
                     await interaction.editReply("You've joined the Alpha Team!");
                     break;
                 case "bravo":
-                    await discordApi.removeColorRoles(everyRole, interaction.member.id);
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                    await discordApi.addColorRoles([inkRoles[1]], interaction.member.id);
+                    await discordApi.addColorRoles([inkRoles[1]], interaction.member.id, everyRole);
                     await interaction.editReply("You've joined the Bravo Team!");
                     break;
                 case "leave":
