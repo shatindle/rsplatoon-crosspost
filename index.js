@@ -199,7 +199,7 @@ discordApi.onReady(() => {
         [{
             name: "team",
             type: "string",
-            description: "Use the gumball machine or remove the role",
+            description: "Pick a team or remove the role",
             choices: [
                 {
                     name: "Alpha",
