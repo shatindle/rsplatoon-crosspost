@@ -181,7 +181,7 @@ discordApi.onReady(() => {
 
             if (action === "gumball") {
                 await discordApi.removeColorRoles(everyRole, interaction.member.id);
-                await discordApi.toggleColorRoles(roles, interaction.member.id);
+                await discordApi.addColorRoles(roles, interaction.member.id);
 
                 interaction.editReply("You've got a new Paruko Fan role!");
             } else if (action === "remove") {

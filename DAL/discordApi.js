@@ -365,12 +365,7 @@ async function addColorRoles(roles, userId) {
         force: true
     });
 
-    var hasRole = member.roles.cache.some(t=> roles.includes(t.id));
-
-    if (!hasRole) {
-        await member.roles.add(roles[Math.floor(Math.random()*roles.length)]);
-        return true;
-    }
+    await member.roles.add(roles[Math.floor(Math.random()*roles.length)]);
 }
 
 /**
@@ -386,13 +381,7 @@ async function removeColorRoles(roles, userId) {
         force: true
     });
 
-    var hasRole = member.roles.cache.some(t=> roles.includes(t.id));
-
-    if (hasRole) {
-        // remove the roles
-        await member.roles.remove(roles);
-        return false;
-    }
+    await member.roles.remove(roles);
 }
 
 const commands = [];
