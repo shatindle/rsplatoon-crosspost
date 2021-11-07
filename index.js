@@ -310,9 +310,9 @@ discordApi.onReady(() => {
                                     .setLabel("Full Profile")
                                     .setStyle("LINK")
                             );
-                        await interaction.editReply({ content: "<@" + userToLookup.id + ">\n**Friend code:** \n\n" + response.friendCode, components: [row] });
+                        await interaction.editReply({ content: "<@" + userToLookup.id + ">\n**Friend code:** \n" + response.friendCode, components: [row] });
                     } else {
-                        await interaction.editReply("<@" + userToLookup.id + ">\n**Friend code:** \n\n" + response.friendCode);
+                        await interaction.editReply("<@" + userToLookup.id + ">\n**Friend code:** \n" + response.friendCode);
                     }
                 } else {
                     await interaction.editReply("Friend code not set");
