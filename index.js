@@ -4,6 +4,7 @@ const database = require("./DAL/databaseApi");
 const databaseApi = require("./DAL/databaseApi");
 const profileApi = require("./DAL/profileApi");
 const settings = require("./settings.json");
+const { MessageActionRow, MessageButton } = require("discord.js");
 
 const roles = settings.colorRoles;
 const roleColors = settings.colors;
@@ -300,10 +301,22 @@ discordApi.onReady(() => {
 
                 var response = await profileApi.getProfile(userToLookup);
 
-                if (response.friendCode)
-                    await interaction.editReply("**Friend code:** \n" + response.friendCode + (response.profileId ? "\n\n**Full Profile**: \n" + settings.profile.url + settings.profile.get + "/" + response.profileId + "?_v=" + new Date().valueOf() : ""));
-                else 
+                if (response.friendCode) {
+                    if (response.profileId) {
+                        var row = new MessageActionRow()
+                            .addComponents(
+                                new MessageButton()
+                                    .setURL(settings.profile.url + settings.profile.get + "/" + response.profileId + "?_v=" + new Date().valueOf())
+                                    .setLabel("Full Profile")
+                                    .setStyle("LINK")
+                            );
+                        await interaction.editReply({ content: "**Friend code:** \n" + response.friendCode, components: [row] });
+                    } else {
+                        await interaction.editReply("**Friend code:** \n" + response.friendCode);
+                    }
+                } else {
                     await interaction.editReply("Friend code not set");
+                }
             }
         }
     )
