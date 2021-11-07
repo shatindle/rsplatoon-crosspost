@@ -292,14 +292,14 @@ discordApi.onReady(() => {
                         await interaction.editReply("Error updating friend code: unknown error");
                 }
             } else {
-                var userToLookup = interaction.member.id;
+                var userToLookup = interaction.member;
 
                 var otherUser = interaction.options.getUser("user");
 
                 if (otherUser)
-                    userToLookup = otherUser.id;
+                    userToLookup = otherUser;
 
-                var response = await profileApi.getProfile(userToLookup);
+                var response = await profileApi.getProfile(userToLookup.id);
 
                 if (response.friendCode) {
                     if (response.profileId) {
@@ -310,9 +310,9 @@ discordApi.onReady(() => {
                                     .setLabel("Full Profile")
                                     .setStyle("LINK")
                             );
-                        await interaction.editReply({ content: "**Friend code:** \n" + response.friendCode, components: [row] });
+                        await interaction.editReply({ content: userToLookup.displayName + "\n\n**Friend code:** \n" + response.friendCode, components: [row] });
                     } else {
-                        await interaction.editReply("**Friend code:** \n" + response.friendCode);
+                        await interaction.editReply(userToLookup.displayName + "\n\n**Friend code:** \n" + response.friendCode);
                     }
                 } else {
                     await interaction.editReply("Friend code not set");
