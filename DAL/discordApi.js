@@ -114,7 +114,7 @@ async function getMessageHistory(
     channelId = "",
     limit = 10) {
 
-    var channel = discord.channels.fetch(channelId);
+    var channel = await discord.channels.fetch(channelId);
     
     var lastMessages = (await channel.messages.fetch({ limit: limit })).first(10);
 
