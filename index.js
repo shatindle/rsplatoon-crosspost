@@ -240,23 +240,12 @@ discordApi.onReady(() => {
         "Manage your profile!  Take your link with you wherever you go!  It even works outside of Discord.",
         [{
             subcommand: true,
-            name: "edit",
-            description: "Edit your profile",
+            name: "friendcode",
+            description: "Edit your friend code",
             parameters: [{
-                name: "part",
-                type: "string",
-                description: "Change a part of your profile",
-                choices: [
-                    {
-                        name: "Friend Code",
-                        value: "friendcode"
-                    },
-                ],
-                required: true
-            }, {
                 name: "value",
                 type: "string",
-                description: "The updated value",
+                description: "Your friend code",
                 required: true
             }]
         }, {
@@ -277,20 +266,17 @@ discordApi.onReady(() => {
         async (interaction) => {
             var subcommand = interaction.options._subcommand;
 
-            if (subcommand === "edit") {
-                const part = interaction.options.getString("part");
+            if (subcommand === "friendcode") {
                 const value = interaction.options.getString("value");
 
-                if (part === "friendcode") {
-                    var response = await profileApi.setProfile(interaction.member.id, value);
+                var response = await profileApi.setProfile(interaction.member.id, value);
 
-                    if (response.result === "updated")
-                        await interaction.editReply("Updated friend code");
-                    else if (response.result)
-                        await interaction.editReply("Error updating friend code: " + response.result);
-                    else 
-                        await interaction.editReply("Error updating friend code: unknown error");
-                }
+                if (response.result === "updated")
+                    await interaction.editReply("Updated friend code");
+                else if (response.result)
+                    await interaction.editReply("Error updating friend code: " + response.result);
+                else 
+                    await interaction.editReply("Error updating friend code: unknown error");
             } else {
                 var userToLookup = interaction.member;
 
