@@ -310,12 +310,17 @@ discordApi.onReady(() => {
                                     .setLabel("Full Profile")
                                     .setStyle("LINK")
                             );
-                        await interaction.editReply({ content: "<@" + userToLookup.id + ">\n**Friend code:** \n" + response.friendCode, components: [row] });
-                        
+
+                        const attachments = [];
+
                         if (response.card && response.card !== "NONE") {
                             const profileCard = new MessageAttachment(response.card);
-                            await interaction.reply({attachment: [profileCard]});
+                            attachments.push(profileCard);
                         }
+
+                        await interaction.editReply({ content: "<@" + userToLookup.id + ">\n**Friend code:** \n" + response.friendCode, components: [row], files: attachments });
+                        
+
                     } else {
                         await interaction.editReply("<@" + userToLookup.id + ">\n**Friend code:** \n" + response.friendCode);
                     }
