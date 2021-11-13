@@ -5,7 +5,7 @@ const profileSettings = require("../settings.json").profile;
 
 async function getProfile(userId) {
     var url = new URL(profileSettings.url + profileSettings.get);
-    url.search = new URLSearchParams({ userId });
+    url.search = new URLSearchParams({ userId, _v: new Date().valueOf() });
 
     const headers = {
         'Content-Type': 'application/json'  
