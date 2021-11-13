@@ -4,7 +4,7 @@ const database = require("./DAL/databaseApi");
 const databaseApi = require("./DAL/databaseApi");
 const profileApi = require("./DAL/profileApi");
 const settings = require("./settings.json");
-const { MessageActionRow, MessageButton } = require("discord.js");
+const { MessageActionRow, MessageButton, MessageAttachment } = require("discord.js");
 
 const roles = settings.colorRoles;
 const roleColors = settings.colors;
@@ -311,6 +311,11 @@ discordApi.onReady(() => {
                                     .setStyle("LINK")
                             );
                         await interaction.editReply({ content: "<@" + userToLookup.id + ">\n**Friend code:** \n" + response.friendCode, components: [row] });
+                        
+                        if (response.card && response.card !== "NONE") {
+                            const profileCard = new MessageAttachment(response.card);
+                            await interaction.reply({attachment: [profileCard]});
+                        }
                     } else {
                         await interaction.editReply("<@" + userToLookup.id + ">\n**Friend code:** \n" + response.friendCode);
                     }
