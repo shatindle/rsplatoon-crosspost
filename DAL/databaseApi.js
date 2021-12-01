@@ -85,9 +85,10 @@ async function associateIds(redditId, discordId) {
 
 async function cleanupOldAssociations() {
     // delete documents older than 3 days
-    var date = Date.now() - 3 * 24 * 60 * 60 * 1000;
+    const date = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
+    const firestoreDate = Firestore.Timestamp.fromDate(date);
 
-    var docsToDelete = await db.collection("associations").where("createdOn", "<", date).get();
+    const docsToDelete = await db.collection("associations").where("createdOn", "<", firestoreDate).get();
 
     docsToDelete.forEach(element => {
         element.ref.delete();
