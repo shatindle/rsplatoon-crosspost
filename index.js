@@ -52,6 +52,7 @@ discordApi.onMessage(async (message) => {
     }
 });
 
+// TODO: abstract this for other servers
 if (settings.upvote) {
     discordApi.onReaction(async function(reaction, user) {
         if (reaction.message.channel.id === settings.discord.art) {
@@ -157,7 +158,9 @@ discordApi.onReady(() => {
                 redditPost.flairText,
                 redditPost.flairIcon,
                 interaction);
-        }
+        },
+        false,
+        true
     );
 
     discordApi.addSlashCommand(
@@ -191,7 +194,9 @@ discordApi.onReady(() => {
                     interaction.editReply("You are no longer a Paruko Fan.");
                     break;
             }
-        }
+        },
+        false,
+        false
     );
 
     discordApi.addSlashCommand(
@@ -232,7 +237,9 @@ discordApi.onReady(() => {
                     await interaction.editReply("You've left the team!");
                     break;
             }
-        }
+        },
+        false,
+        false
     );
 
     discordApi.addSlashCommand(
@@ -314,7 +321,9 @@ discordApi.onReady(() => {
                     await interaction.editReply("Friend code not set");
                 }
             }
-        }
+        },
+        false,
+        true
     )
 
     discordApi.registerSlashCommands();
@@ -415,7 +424,7 @@ async function getNewPosts() {
         useSubredditInstead = false;
 
     // in the event something goes wrong, skip this step
-    // TODO: remove this empty try/catch once we build confidence
+    // TODO: abstract this so other servers can take advantage of it
     try {
         // check if we should post in #art or #subreddit
         var history = await discordApi.getMessageHistory(artChannel, 3);

@@ -127,6 +127,115 @@ async function markReported(redditId, deletedBy) {
     });
 }
 
+const guildChannels = {};
+
+async function setSubredditChannel(guildId, channelId) {
+    var doc = await db.collection("crosspostchannels").doc(guildId).get();
+
+    var now = Firestore.Timestamp.now();
+
+    if (doc.exists) {
+        await db.collection("crosspostchannels").doc(guildId).update({
+            subreddit: channelId,
+            updatedOn: now
+        });
+
+        guildChannels[guildId].subreddit = channelId;
+    } else {
+        await db.collection("crosspostchannels").doc(guild).set({
+            guildId: guildId,
+            subreddit: channelId,
+            art: null,
+            artfridge: null,
+            updatedOn: now,
+            createdOn: now
+        });
+
+        guildChannels[guildId] = {
+            subreddit: channelId,
+            art: null,
+            artfridge: null
+        };
+    }
+}
+
+async function setArtChannel(guildId, channelId) {
+    var doc = await db.collection("crosspostchannels").doc(guildId).get();
+
+    var now = Firestore.Timestamp.now();
+
+    if (doc.exists) {
+        await db.collection("crosspostchannels").doc(guildId).update({
+            art: channelId,
+            updatedOn: now
+        });
+
+        guildChannels[guildId].art = channelId;
+    } else {
+        await db.collection("crosspostchannels").doc(guild).set({
+            guildId: guildId,
+            subreddit: null,
+            art: channelId,
+            artfridge: null,
+            updatedOn: now,
+            createdOn: now
+        });
+
+        guildChannels[guildId] = {
+            subreddit: null,
+            art: channelId,
+            artfridge: null
+        };
+    }
+}
+
+async function setArtFridgeChannel(guildId, channelId) {
+    var doc = await db.collection("crosspostchannels").doc(guildId).get();
+
+    var now = Firestore.Timestamp.now();
+
+    if (doc.exists) {
+        await db.collection("crosspostchannels").doc(guildId).update({
+            artfridge: channelId,
+            updatedOn: now
+        });
+
+        guildChannels[guildId].artfridge = channelId;
+    } else {
+        await db.collection("crosspostchannels").doc(guild).set({
+            guildId: guildId,
+            subreddit: null,
+            art: null,
+            artfridge: channelId,
+            updatedOn: now,
+            createdOn: now
+        });
+
+        guildChannels[guildId] = {
+            subreddit: null,
+            art: null,
+            artfridge: channelId
+        };
+    }
+}
+
+async function loadAllChannels() {
+    const docs = await db.collection("crosspostchannels").get();
+
+    Object.keys(guildChannels).forEach(key => delete guildChannels[key]);
+
+    docs.forEach(element => {
+        guildChannels[element.id] = element.data();
+    });
+}
+
+async function deleteGuild(guildId) {
+    await db.collection('crosspostchannels').doc(guildId).delete();
+
+    if (guildChannels[guildId])
+        delete guildChannels[guildId];
+}
+
 module.exports = {
     findByRedditId: findByRedditId,
     findByDiscordId: findByDiscordId,

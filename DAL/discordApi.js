@@ -388,6 +388,7 @@ async function removeColorRoles(roles, userId) {
 }
 
 const commands = [];
+const globalCommands = [];
 
 /**
  * @description Registers a slash command for the bot (only needs to be run once)
@@ -395,8 +396,10 @@ const commands = [];
  * @param {string} description User friendly description of the slash command
  * @param {Array<Object>} parameters [{ name: "", type: "", description: "", required: bool, choices: [] }]
  * @param {Function} responseCallback A callback function that will be given the interaction
+ * @param {Boolean} subcommand Whether or not this command is a subcommand
+ * @param {Boolean} global Whether or not this command should be available in all servers.  Defaults to false
  */
-function addSlashCommand(name = "", description = "", parameters = [], responseCallback = onInteractionCallback, subcommand = false) {
+function addSlashCommand(name = "", description = "", parameters = [], responseCallback = onInteractionCallback, subcommand = false, global = false) {
     if (interactionCallbacks[name] && !subcommand)
         throw "Only one interaction register is allowed per slash command";
 
@@ -411,7 +414,10 @@ function addSlashCommand(name = "", description = "", parameters = [], responseC
 
     createCommand(data, name, description, parameters);
 
-    commands.push(data.toJSON());
+    if (global) 
+        globalCommands.push(data.toJSON());
+    else
+        commands.push(data.toJSON());
 
     interactionCallbacks[name] = responseCallback;
 }
@@ -522,7 +528,11 @@ async function registerSlashCommands() {
 
     const rest = new REST({ version: '9' }).setToken(token);
 
-    await rest.put(Routes.applicationGuildCommands(clientId, thisGuild), { body: commands });
+    if (commands && commands.length > 0)
+        await rest.put(Routes.applicationGuildCommands(clientId, thisGuild), { body: commands });
+
+    if (globalCommands && globalCommands.length > 0)
+        await rest.put(Routes.applicationCommands(clientId), { body: globalCommands });
 
     console.log("commands registered");
 }
@@ -531,8 +541,8 @@ async function registerSlashCommands() {
  * @description Listens for messages it is mentioned in so it can respond
  */
 discord.on('messageCreate', async message => {
-    // ignore direct messages
-    if (!message.guild) return;
+    // ignore messages not in the primary server
+    if (message.guild !== thisGuild) return;
 
     // ignore posts from bots
     if (message.author.bot) return;
@@ -552,8 +562,8 @@ discord.on('messageCreate', async message => {
 });
 
 discord.on('messageDelete', async message => {
-    // ignore direct messages
-    if (!message.guild) return;
+    // ignore deletes not in the primary server
+    if (message.guild !== thisGuild) return;
 
     if (message.partial) {
         // skip partial messages since there's nothing to do with them
@@ -634,15 +644,12 @@ discord.on("messageReactionAdd", async (reaction, user) => {
         }
     }
 
+    // Now the message has been cached and is fully available
     for (var i = 0; i < reactionCallbacks.length; i++) {
         try {
             await reactionCallbacks[i](reaction, user);
         } catch { }
     }
-    // // Now the message has been cached and is fully available
-    // console.log(`${reaction.message.author}'s message "${reaction.message.content}" gained a reaction!`);
-    // // The reaction is now also fully available and the properties will be reflected accurately:
-    // console.log(`${reaction.count} user(s) have given the same reaction to this message!`);
 });
 
 module.exports = {
