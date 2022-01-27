@@ -503,35 +503,39 @@ async function cleanUp() {
 }
 
 async function crossPostTweets() {
-    if (!settings.tweetChannel || !settings.twitterUsers || settings.twitterUsers.length === 0)
+    try {
+        if (!settings.tweetChannel || !settings.twitterUsers || settings.twitterUsers.length === 0)
         return;
 
-    for (var userId of settings.twitterUsers) {
-        let { tweets, user} = await twitterApi.getRecentTweets(userId);
+        for (var userId of settings.twitterUsers) {
+            let { tweets, user} = await twitterApi.getRecentTweets(userId);
 
-        for (let i = 0; i < tweets.length; i++) {
-            let tweet = tweets[i];
-            
-            if (!(await databaseApi.findByTwitterId(tweet.id))) {
-                let text = tweet.text;
-                if (text.lastIndexOf("https:") > -1) {
-                    text = text.substring(0, text.lastIndexOf("https:"));
+            for (let i = 0; i < tweets.length; i++) {
+                let tweet = tweets[i];
+                
+                if (!(await databaseApi.findByTwitterId(tweet.id))) {
+                    let text = tweet.text;
+                    if (text.lastIndexOf("https:") > -1) {
+                        text = text.substring(0, text.lastIndexOf("https:"));
+                    }
+
+                    // tweet hasn't been cross posted, cross post it
+                    const discordId = await discordApi.postTwitterToDiscord(
+                        settings.tweetChannel,
+                        user.username,
+                        text,
+                        await languageApi.translateText(text),
+                        tweet.created_at,
+                        "https://twitter.com/" + user.username + "/status/" + tweet.id,
+                        tweet.attachments
+                    );
+        
+                    await databaseApi.saveTweet(tweet, discordId);
                 }
-
-                // tweet hasn't been cross posted, cross post it
-                const discordId = await discordApi.postTwitterToDiscord(
-                    settings.tweetChannel,
-                    user.username,
-                    text,
-                    await languageApi.translateText(text),
-                    tweet.created_at,
-                    "https://twitter.com/" + user.username + "/status/" + tweet.id,
-                    tweet.attachments
-                );
-    
-                await databaseApi.saveTweet(tweet, discordId);
             }
         }
+    } catch (err) {
+        console.log("Error getting tweets: " + err);
     }
 }
 
