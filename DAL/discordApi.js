@@ -232,10 +232,6 @@ async function postTwitterToDiscord(
     createdOn = "",
     url = "",
     attachments = []) {
-    
-    if (text.lastIndexOf("https:") > -1) {
-        text = text.substring(0, text.lastIndexOf("https:"));
-    }
 
     const contentToSend = {
         embeds: [{
