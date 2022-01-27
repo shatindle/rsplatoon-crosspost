@@ -241,9 +241,6 @@ async function postTwitterToDiscord(
         }]
     };
 
-    if (settings.twitterRolePing)
-        contentToSend.content = "<@&" + settings.twitterRolePing + ">";
-
     if (attachments && attachments.length > 0) {
         for (let i = 0; i < attachments.length; i++) {
             if (i !== 0) {
