@@ -263,6 +263,14 @@ async function postTwitterToDiscord(
         
         var message = await channel.send(contentToSend);
 
+        if (message.channel.type === "GUILD_NEWS") {
+            try {
+                await message.crosspost();
+            } catch (cross_err) {
+                console.log("Unable to crosspost: " + cross_err);
+            }
+        }
+
         // @ts-ignore
         return message.id;
     } catch (err) {
