@@ -5,6 +5,8 @@ const databaseApi = require("./DAL/databaseApi");
 const profileApi = require("./DAL/profileApi");
 const settings = require("./settings.json");
 const { MessageActionRow, MessageButton, MessageAttachment } = require("discord.js");
+const twitterApi = require("./DAL/twitterApi");
+const languageApi = require("./DAL/languageApi");
 
 const roles = settings.colorRoles;
 const roleColors = settings.colors;
@@ -500,6 +502,34 @@ async function cleanUp() {
     }
 }
 
+async function crossPostTweets() {
+    if (!settings.tweetChannel || !settings.twitterUsers || settings.twitterUsers.length === 0)
+        return;
+
+    for (var userId of settings.twitterUsers) {
+        let { tweets, user} = await twitterApi.getRecentTweets(userId);
+
+        for (let i = 0; i < tweets.length; i++) {
+            let tweet = tweets[i];
+            
+            if (!(await databaseApi.findByTwitterId(tweet.id))) {
+                // tweet hasn't been cross posted, cross post it
+                const discordId = await discordApi.postTwitterToDiscord(
+                    settings.tweetChannel,
+                    user.username,
+                    tweet.text,
+                    await languageApi.translateText(tweet.text),
+                    tweet.created_at,
+                    "https://twitter.com/" + user.username + "/status/" + tweet.id,
+                    tweet.attachments
+                );
+    
+                await databaseApi.saveTweet(tweet, discordId);
+            }
+        }
+    }
+}
+
 // run on startup, then run once per minute
 setTimeout(getNewPosts, 6000);
 var interval = setInterval(getNewPosts, 60000);
@@ -508,5 +538,10 @@ var interval = setInterval(getNewPosts, 60000);
 setTimeout(changeRoleColors, 5000);
 var interval2 = setInterval(changeRoleColors, 86400000);
 
+// clean up database
 setTimeout(cleanUp, 5000);
 var interval3 = setInterval(cleanUp, 86400000);
+
+// cross post tweets once per minute
+setTimeout(crossPostTweets, 5000);
+var interval4 = setInterval(crossPostTweets, 60000);

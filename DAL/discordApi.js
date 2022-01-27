@@ -224,6 +224,56 @@ async function postRedditToDiscord(
     }
 }
 
+async function postTwitterToDiscord(
+    channelId = "",
+    username = "",
+    text = "",
+    translatedText = "",
+    createdOn = "",
+    url = "",
+    attachments = []) {
+    
+    if (text.lastIndexOf("https:") > -1) {
+        text = text.substring(0, text.lastIndexOf("https:"));
+    }
+
+    const contentToSend = {
+        embeds: [{
+            title: "News from @" + username,
+            description: text + "\n\n__Translation__\n" + translatedText,
+            timestamp: createdOn
+        }]
+    };
+
+    if (attachments && attachments.length > 0) {
+        for (let i = 0; i < attachments.length; i++) {
+            if (i !== 0) {
+                contentToSend.embeds.push({
+                    url,
+                    image: {}
+                });
+            } else {
+                contentToSend.embeds[0].url = url;
+                contentToSend.embeds[0].image = {};
+            }
+
+            contentToSend.embeds[i].image.url = attachments[i].url;
+        }
+    }
+
+    // respond with a regular message
+    try {
+        var channel = await discord.channels.fetch(channelId);
+        
+        var message = await channel.send(contentToSend);
+
+        // @ts-ignore
+        return message.id;
+    } catch (err) {
+        console.log("offending link: " + imageUrl);
+    }
+}
+
 async function postAttachments(channelId = "", attachments = []) {
     // post the content
     try {
@@ -662,5 +712,6 @@ module.exports = {
     changeRoleColor: changeRoleColor,
     toggleColorRoles: toggleColorRoles,
     removeColorRoles: removeColorRoles,
-    addColorRoles: addColorRoles
+    addColorRoles: addColorRoles,
+    postTwitterToDiscord
 };

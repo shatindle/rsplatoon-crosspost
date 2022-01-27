@@ -6,7 +6,7 @@ const db = new Firestore({
 });
 
 const postCache = [];
-const fridgeCache = [];
+const tweetCache = [];
 
 function addToCache(item, cache) {
     cache.unshift(item);
@@ -25,6 +25,48 @@ function checkPostCache(item) {
             return first;
         }
     }
+}
+
+function checkTweetCache(item) {
+    for (var i = 0; i < tweetCache.length; i++) {
+        if (tweetCache[i].id == item.id) {
+            var first = tweetCache[i];
+
+            tweetCache.sort(function(x,y){ return x == first ? -1 : y == first ? 1 : 0; });
+            
+            return first;
+        }
+    }
+}
+
+async function findByTwitterId(id) {
+    const inCacheValue = checkTweetCache({ id });
+
+    if (inCacheValue)
+        return inCacheValue;
+
+    const response = await db.collection("tweets").doc(id).get();
+
+    if (!response.exists)
+        return null;
+
+    let result = response.data();
+
+    addToCache(result, tweetCache);
+
+    return result;
+}
+
+async function saveTweet(tweet, discordId) {
+    var record = {
+        id: tweet.id,
+        discordId,
+        createdOn: Firestore.Timestamp.now()
+    };
+    
+    await db.collection("tweets").doc(tweet.id).set(record);
+
+    addToCache(record, tweetCache);
 }
 
 async function findByRedditId(id) {
@@ -105,7 +147,6 @@ async function postToFridge(messageId, guildId) {
     await db.collection("artfridge").doc(guildId + "-" + messageId).set(record);
 
     // TODO: add caching to avoid server wait
-    //addToCache(record, fridgeCache);
 }
 
 async function getArtFromFridge(messageId, guildId) {
@@ -128,11 +169,13 @@ async function markReported(redditId, deletedBy) {
 }
 
 module.exports = {
-    findByRedditId: findByRedditId,
-    findByDiscordId: findByDiscordId,
-    associateIds: associateIds,
-    markReported: markReported,
-    postToFridge: postToFridge,
-    getArtFromFridge: getArtFromFridge,
-    cleanupOldAssociations: cleanupOldAssociations
+    findByRedditId,
+    findByDiscordId,
+    associateIds,
+    markReported,
+    postToFridge,
+    getArtFromFridge,
+    cleanupOldAssociations,
+    findByTwitterId,
+    saveTweet
 };
