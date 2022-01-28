@@ -226,6 +226,7 @@ async function postRedditToDiscord(
 
 async function postTwitterToDiscord(
     channelId = "",
+    color = 0,
     username = "",
     text = "",
     translatedText = "",
@@ -236,6 +237,7 @@ async function postTwitterToDiscord(
     const contentToSend = {
         embeds: [{
             title: "News from @" + username,
+            color,
             description: text + "\n\n__Translation__\n" + translatedText,
             timestamp: createdOn
         }]

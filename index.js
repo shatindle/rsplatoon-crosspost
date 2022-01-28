@@ -502,6 +502,14 @@ async function cleanUp() {
     }
 }
 
+// used in the twitter crosspost tweets
+const splatoon3Colors = [
+    15335227,
+    6306787, 
+    7010253,
+    16484158
+];
+
 async function crossPostTweets() {
     try {
         if (!settings.tweetChannel || !settings.twitterUsers || settings.twitterUsers.length === 0)
@@ -522,6 +530,7 @@ async function crossPostTweets() {
                     // tweet hasn't been cross posted, cross post it
                     const discordId = await discordApi.postTwitterToDiscord(
                         settings.tweetChannel,
+                        splatoon3Colors[Math.floor(Math.random()*splatoon3Colors.length)],
                         user.username,
                         text,
                         await languageApi.translateText(text),
