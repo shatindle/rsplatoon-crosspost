@@ -504,10 +504,10 @@ async function cleanUp() {
 
 // used in the twitter crosspost tweets
 const splatoon3Colors = [
-    15335227,
-    6306787, 
-    7010253,
-    16484158
+    15335227, // #e9ff3b
+    6306787,  // #603be3
+    7010253,  // #6af7cd
+    16484158  // #fb873e
 ];
 
 async function crossPostTweets() {
