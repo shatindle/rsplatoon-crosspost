@@ -7,6 +7,7 @@ const settings = require("./settings.json");
 const { MessageActionRow, MessageButton, MessageAttachment } = require("discord.js");
 const twitterApi = require("./DAL/twitterApi");
 const languageApi = require("./DAL/languageApi");
+const japaneseToEnglishSplatoonApi = require("./DAL/japaneseToEnglishSplatoonApi");
 
 const roles = settings.colorRoles;
 const roleColors = settings.colors;
@@ -533,7 +534,7 @@ async function crossPostTweets() {
                         splatoon3Colors[Math.floor(Math.random()*splatoon3Colors.length)],
                         user.username,
                         text,
-                        await languageApi.translateText(text),
+                        japaneseToEnglishSplatoonApi.swapAll(await languageApi.translateText(text)),
                         tweet.created_at,
                         "https://twitter.com/" + user.username + "/status/" + tweet.id,
                         tweet.attachments
