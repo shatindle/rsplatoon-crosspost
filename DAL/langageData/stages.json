@@ -1,0 +1,51 @@
+{
+    "splatoon1": {
+        "デカライン高架下": "Urchin Underpass",
+        "ハコフグ倉庫": "Walleye Warehouse",
+        "シオノメ油田": "Saltspray Rig",
+        "アロワナモール": "Arowana Mall",
+        "Ｂバスパーク": "Blackbelly Skatepark",
+        "ホッケふ頭": "Port Mackerel",
+        "モズク農園": "Kelp Dome",
+        "ネギトロ炭鉱": "Bluefin Depot",
+        "タチウオパーキング": "Moray Towers",
+        "モンガラキャンプ場": "Camp Triggerfish",
+        "ヒラメが丘団地": "Flounder Heights",
+        "マサバ海峡大橋": "Hammerhead Bridge",
+        "キンメダイ美術館": "Museum d'Alfonsino",
+        "マヒマヒリゾート＆スパ": "Mahi-Mahi Resort",
+        "ショッツル鉱山": "Piranha Pit",
+        "アンチョビットゲームズ": "Ancho-V Games"
+    },
+    "splatoon2": {
+        "バッテラストリート": "The Reef",
+        "フジツボスポーツクラブ": "Musselforge Fitness",
+        "ガンガゼ野外音楽堂": "Starfish Mainstage",
+        "コンブトラック": "Humpback Pump Track",
+        "海女美術大学": "Inkblot Art Academy",
+        "チョウザメ造船": "Sturgeon Shipyard",
+        "タチウオパーキング": "Moray Towers",
+        "ホッケふ頭": "Port Mackerel",
+        "ミステリーゾーン": "Shifty Station",
+        "マンタマリア号": "Manta Maria",
+        "モズク農園": "Kelp Dome",
+        "エンガワ河川敷": "Snapper Canal",
+        "Ｂバスパーク": "Blackbelly Skatepark",
+        "ザトウマーケット": "MakoMart",
+        "ハコフグ倉庫": "Walleye Warehouse",
+        "デボン海洋博物館": "Shellendorf Institute",
+        "アロワナモール": "Arowana Mall",
+        "アジフライスタジアム": "Goby Arena",
+        "ショッツル鉱山": "Piranha Pit",
+        "モンガラキャンプ場": "Camp Triggerfish",
+        "スメーシーワールド": "Wahoo World",
+        "ホテルニューオートロ": "New Albacore Hotel",
+        "アンチョビットゲームズ": "Ancho-V Games",
+        "ムツゴ楼": "Skipper Pavilion"
+    },
+    "splatoon3": {
+        "ユノハナ大渓谷": "Scorch Gorge",
+        "ゴンズイ地区": "Eeltail Alley",
+        "キンメダイ美術館": "Museum d'Alfonsino"
+    }
+}
