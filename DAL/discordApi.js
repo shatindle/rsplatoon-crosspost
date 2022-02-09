@@ -267,7 +267,8 @@ async function postTwitterToDiscord(
         
         try {
             if (message.channel.type === "GUILD_NEWS")
-                await message.crosspost();
+                // do not wait for crosspost to finish
+                message.crosspost().catch(e => console.log(e));
         } catch (cross_err) {
             console.log("Unable to crosspost: " + cross_err);
         }
