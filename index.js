@@ -275,7 +275,7 @@ discordApi.onReady(() => {
                 var response = await profileApi.setProfile(interaction.member.id, value);
 
                 if (response.result === "updated")
-                    await interaction.editReply("Updated friend code");
+                    await interaction.editReply(`Updated your friend code! To update your username or drip, visit https://profile.rsplatoon.com`);
                 else if (response.result)
                     await interaction.editReply("Error updating friend code: " + response.result);
                 else 
