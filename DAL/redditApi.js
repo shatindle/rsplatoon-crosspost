@@ -53,7 +53,7 @@ const supportedColors = {
     "Image": parseInt("ffd635", 16),
     "Video": parseInt("f08f44", 16),
     "Stream": parseInt("f08f44", 16),
-    "Official Tumblr": parseInt("445fff", 16),
+    "Official News": parseInt("445fff", 16),
     "Splatfest": parseInt("e549a8", 16),
     //"Spoiler": parseInt("")
     "Discussion": parseInt("ff88bd", 16),
@@ -74,7 +74,7 @@ const flairIcons = {
     "Image": "https://cdn.discordapp.com/attachments/752615708709617796/752629013704343562/image.png",
     "Video": "https://cdn.discordapp.com/attachments/752615708709617796/752629017064243280/video.png",
     "Stream": "https://cdn.discordapp.com/attachments/752615708709617796/752629021753475253/stream.png",
-    "Official Tumblr": "https://cdn.discordapp.com/attachments/752615708709617796/752629023749963876/tumblr.png",
+    "Official News": "https://cdn.discordapp.com/attachments/752615708709617796/752629023749963876/tumblr.png",
     "Splatfest": "https://cdn.discordapp.com/attachments/752615708709617796/752629026035728484/splatfest.png",
     "Spoiler": "https://cdn.discordapp.com/attachments/752615708709617796/752629013704343562/image.png",
     "Discussion": "https://cdn.discordapp.com/attachments/752615708709617796/752629019689877606/discussion.png",
