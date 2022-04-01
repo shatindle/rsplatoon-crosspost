@@ -7,7 +7,10 @@ const discord = new DiscordApi.Client({
     intents: [
         DiscordApi.Intents.FLAGS.GUILDS,
         DiscordApi.Intents.FLAGS.GUILD_MESSAGES,
-        DiscordApi.Intents.FLAGS.GUILD_MESSAGE_REACTIONS
+        DiscordApi.Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
+        
+        // TODO: remove after event
+        DiscordApi.Intents.FLAGS.GUILD_MEMBERS
     ], 
     partials: ['MESSAGE', 'CHANNEL', 'REACTION'] 
 });
@@ -583,6 +586,17 @@ async function registerSlashCommands() {
     console.log("commands registered");
 }
 
+// TODO: delete when done
+async function giveRole(memberId) {
+    var guild = discord.guilds.cache.get(thisGuild);
+    var member = await guild.members.fetch({
+        user: memberId,
+        force: true
+    });
+    let role = await guild.roles.fetch("959520277396590652");
+    await member.roles.add(role);
+}
+
 /** 
  * @description Listens for messages it is mentioned in so it can respond
  */
@@ -605,6 +619,10 @@ discord.on('messageCreate', async message => {
             messageCallbacks[i](message);
         } catch { }
     }
+    
+    // TODO: delete when done
+    if (message.channel.id === "959522337177346129")
+        await giveRole(message.member.id);
 });
 
 discord.on('messageDelete', async message => {
