@@ -16,7 +16,8 @@ const discord = new DiscordApi.Client({
 });
 
 const { token, clientId } = require('../discord.json');
-const thisGuild = require('../settings.json').guild;
+const settings = require("../settings.json");
+const thisGuild = settings.guild;
 
 
 // the list of callback to run through when a message is deleted
@@ -238,6 +239,7 @@ async function postTwitterToDiscord(
     attachments = []) {
 
     const contentToSend = {
+        content: settings.tweetPingRole ? `<@&${settings.tweetPingRole}>` : "",
         embeds: [{
             title: "News from @" + username,
             color,
