@@ -1,5 +1,5 @@
 const stages = require("./langageData/stages.json");
-const weapons = require("./langageData/weapons.json").weapons;
+const mainWeapons = require("./langageData/weapons.json").main;
 
 function stageSwap(text) {
     // stage transformation
@@ -12,7 +12,7 @@ function stageSwap(text) {
     }
 
     // weapon transformation
-    for (var weaponPair of weapons) {
+    for (var weaponPair of mainWeapons) {
         var japanese = weaponPair[0];
         var english = weaponPair[1];
 
