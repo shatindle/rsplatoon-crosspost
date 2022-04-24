@@ -222,7 +222,7 @@ async function ProcessPosts(newPosts) {
  */
 async function getNewPosts(sub = "r/Splatoon") {
     var newPosts = await reddit.getSubreddit(sub)
-        .getNew();
+        .getNew({ limit: 10 });
 
     return ProcessPosts(newPosts);
 }
