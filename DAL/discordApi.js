@@ -195,7 +195,7 @@ async function postRedditToDiscord(
             url: link,
             color: color,
             thumbnail: {
-                url: imageUrl
+                url: flairText === "Fan Art" ? null : imageUrl
             },
             timestamp: new Date(timestamp * 1000).toISOString(),
             author: {
@@ -207,7 +207,8 @@ async function postRedditToDiscord(
                 //icon_url: flairIcon,
                 text: flairText
             }
-        }]
+        }],
+        files: flairText === "Fan Art" && imageUrl ? [imageUrl] : null 
     };
     if (interaction === null) {
         // respond with a regular message
