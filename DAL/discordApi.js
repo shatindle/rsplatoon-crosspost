@@ -207,8 +207,7 @@ async function postRedditToDiscord(
                 //icon_url: flairIcon,
                 text: flairText
             }
-        }],
-        files: flairText === "Fan Art" && imageUrl ? [imageUrl] : null 
+        }]
     };
     if (interaction === null) {
         // respond with a regular message
@@ -216,6 +215,12 @@ async function postRedditToDiscord(
             var channel = await discord.channels.fetch(channelId);
             
             var message = await channel.send(contentToSend);
+
+            if (flairText === "Fan Art")
+                await postAttachments(
+                    channelId,
+                    [imageUrl]
+                );
     
             // @ts-ignore
             return message.id;
