@@ -55,73 +55,81 @@ discordApi.onMessage(async (message) => {
     }
 });
 
-if (settings.upvote) {
+if (settings.discord.starboards) {
     discordApi.onReaction(async function(reaction, user) {
-        if (reaction.message.channel.id === settings.discord.art) {
-            if (reaction.emoji.id !== settings.upvote) return;
-            if (reaction.message.author.bot) return;
-            if (reaction.count > 4) {
-                var message = reaction.message;
-    
-                if (await databaseApi.getArtFromFridge(message.id, message.guild.id))
-                    // it's already on the fridge
-                    return; 
-    
-                // create the art fridge entry
-                var attachments = [];
-    
-                message.attachments.forEach(function(a) {
-                    attachments.push(a.url);
-                });
-                
-                // create the links entry
-                var links = "";
-                
-                try {
-                    if (message.content) {
-                        message.content.match(urlRegex).forEach((urlMatch) => {
-                            // Do something with each element
-                            links += urlMatch + " ";
-                        });
-                    }
-                } catch (err) { 
-                    console.log("problem extracting link: " + err); 
-                }
-    
-                try {
-                    await discordApi.postRedditToDiscord(
-                        settings.discord.artfridge,
-                        "Source",
-                        message.content,
-                        "",
-                        message.url,
-                        message.author.tag,
-                        message.author.avatarURL(),
-                        parseInt("ffd635", 16),
-                        message.createdTimestamp / 1000,
-                        "",
-                        ""
-                    );
-        
-                    if (attachments.length > 0) {
-                        await discordApi.postAttachments(
-                            settings.discord.artfridge,
-                            attachments
-                        );
-                    }
-                    
-                    if (links !== "") {
-                        await discordApi.postText(
-                            settings.discord.artfridge,
-                            links
-                        );
-                    }
-                } catch (err) { }
+        if (reaction.message.author.bot) return;
 
-                try {
-                    await databaseApi.postToFridge(message.id, message.guild.id);
-                } catch (err) { console.log(err); }
+        if (settings.discord.starboard) {
+            for (let board of settings.discord.starboards) {
+                if (board.sources && board.sources.indexOf(reaction.message.channel.id) && reaction.emoji.id === board.upvote) {
+                    // the channel and emoji matched
+                    if (reaction.count >= board.count) {
+                        let message = reaction.message;
+
+                        // TODO: pass the channel
+                        if (await databaseApi.getItemFromFridge(message.id, message.guild.id))
+                            // it's already on the fridge
+                            return; 
+
+                            // create the fridge entry
+                        let attachments = [];
+
+                        message.attachments.forEach(function(a) {
+                            attachments.push(a.url);
+                        });
+
+                        // create the links entry
+                        let links = "";
+                        
+                        try {
+                            if (message.content) {
+                                message.content.match(urlRegex).forEach((urlMatch) => {
+                                    // Do something with each element
+                                    links += urlMatch + " ";
+                                });
+                            }
+                        } catch (err) { 
+                            console.log("problem extracting link: " + err); 
+                        }
+
+                        try {
+                            await discordApi.postRedditToDiscord(
+                                board.target,
+                                "Source",
+                                message.content,
+                                "",
+                                message.url,
+                                message.author.tag,
+                                message.author.avatarURL(),
+                                parseInt(board.color, 16),
+                                message.createdTimestamp / 1000,
+                                "",
+                                ""
+                            );
                 
+                            if (attachments.length > 0) {
+                                await discordApi.postAttachments(
+                                    board.target,
+                                    attachments
+                                );
+                            }
+                            
+                            if (links !== "") {
+                                await discordApi.postText(
+                                    board.target,
+                                    links
+                                );
+                            }
+                        } catch (err) { }
+        
+                        try {
+                            await databaseApi.postToFridge(message.id, message.guild.id);
+                        } catch (err) { console.log(err); }       
+                    }
+
+                    // if we're here, exit because the emoji matched
+                    return;
+                }
             }
         }
     });

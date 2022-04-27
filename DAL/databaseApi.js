@@ -149,7 +149,7 @@ async function postToFridge(messageId, guildId) {
     // TODO: add caching to avoid server wait
 }
 
-async function getArtFromFridge(messageId, guildId) {
+async function getItemFromFridge(messageId, guildId) {
     // TODO: check fridge cache first
 
     var doc = await db.collection("artfridge").doc(guildId + "-" + messageId).get();
@@ -174,7 +174,7 @@ module.exports = {
     associateIds,
     markReported,
     postToFridge,
-    getArtFromFridge,
+    getItemFromFridge,
     cleanupOldAssociations,
     findByTwitterId,
     saveTweet
