@@ -544,7 +544,7 @@ async function crossPostTweets() {
                         splatoon3Colors[Math.floor(Math.random()*splatoon3Colors.length)],
                         user.username,
                         text,
-                        japaneseToEnglishSplatoonApi.swapAll(await languageApi.translateText(text)),
+                        await languageApi.translateText(japaneseToEnglishSplatoonApi.swapAll(text)),
                         tweet.created_at,
                         "https://twitter.com/" + user.username + "/status/" + tweet.id,
                         tweet.attachments
