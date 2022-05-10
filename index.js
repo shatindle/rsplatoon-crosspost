@@ -523,34 +523,38 @@ const splatoon3Colors = [
 
 async function crossPostTweets() {
     try {
-        if (!settings.tweetChannel || !settings.twitterUsers || settings.twitterUsers.length === 0)
-        return;
+        if (!settings.twitters) return;
 
-        for (var userId of settings.twitterUsers) {
-            let { tweets, user} = await twitterApi.getRecentTweets(userId);
+        for (let twitter of settings.twitters) {
+            for (let userId of twitter.accounts) {
+                let { tweets, user } = await twitterApi.getRecentTweets(userId);
 
-            for (let i = 0; i < tweets.length; i++) {
-                let tweet = tweets[i];
-                
-                if (!(await databaseApi.findByTwitterId(tweet.id))) {
-                    let text = tweet.text;
-                    if (text.lastIndexOf("https:") > -1) {
-                        text = text.substring(0, text.lastIndexOf("https:"));
+                for (let i = 0; i < tweets.length; i++) {
+                    let tweet = tweets[i];
+                    
+                    if (!(await databaseApi.findByTwitterId(tweet.id))) {
+                        let text = tweet.text;
+                        if (text.lastIndexOf("https:") > -1) {
+                            text = text.substring(0, text.lastIndexOf("https:"));
+                        }
+    
+                        // tweet hasn't been cross posted, cross post it
+                        const discordId = await discordApi.postTwitterToDiscord(
+                            twitter.target,
+                            splatoon3Colors[Math.floor(Math.random()*splatoon3Colors.length)],
+                            user.username,
+                            text,
+                            twitter.translate ? 
+                                await languageApi.translateText(japaneseToEnglishSplatoonApi.swapAll(text)) :
+                                text,
+                            tweet.created_at,
+                            "https://twitter.com/" + user.username + "/status/" + tweet.id,
+                            tweet.attachments,
+                            twitter.ping
+                        );
+            
+                        await databaseApi.saveTweet(tweet, discordId);
                     }
-
-                    // tweet hasn't been cross posted, cross post it
-                    const discordId = await discordApi.postTwitterToDiscord(
-                        settings.tweetChannel,
-                        splatoon3Colors[Math.floor(Math.random()*splatoon3Colors.length)],
-                        user.username,
-                        text,
-                        await languageApi.translateText(japaneseToEnglishSplatoonApi.swapAll(text)),
-                        tweet.created_at,
-                        "https://twitter.com/" + user.username + "/status/" + tweet.id,
-                        tweet.attachments
-                    );
-        
-                    await databaseApi.saveTweet(tweet, discordId);
                 }
             }
         }

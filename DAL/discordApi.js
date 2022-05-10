@@ -242,10 +242,11 @@ async function postTwitterToDiscord(
     translatedText = "",
     createdOn = "",
     url = "",
-    attachments = []) {
+    attachments = [],
+    tweetPingRole = null) {
 
     const contentToSend = {
-        content: settings.tweetPingRole ? `<@&${settings.tweetPingRole}>` : "",
+        content: tweetPingRole ? `<@&${tweetPingRole}>` : "",
         embeds: [{
             title: "News from @" + username,
             color,
