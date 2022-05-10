@@ -250,7 +250,7 @@ async function postTwitterToDiscord(
         embeds: [{
             title: "News from @" + username,
             color,
-            description: text + "\n\n__Translation__\n" + translatedText,
+            description: text !== translatedText ? text + "\n\n__Translation__\n" + translatedText : text,
             timestamp: createdOn
         }]
     };
