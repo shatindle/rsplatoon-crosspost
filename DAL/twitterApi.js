@@ -13,7 +13,7 @@ async function getRecentTweets(userId, start_date = null) {
     let date = start_date ?? new Date();
 
     if (!start_date) {
-        date.setMinutes(date.getMinutes() - 60);
+        date.setMinutes(date.getMinutes() - 60 * 24);
         date.setHours(0, 0, 0, 0);
     }
 
