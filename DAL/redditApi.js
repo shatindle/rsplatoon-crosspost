@@ -227,6 +227,12 @@ async function getNewPosts(sub = "r/Splatoon") {
     return ProcessPosts(newPosts);
 }
 
+async function getPostById(id) {
+    var post = await reddit.getSubmission(id).fetch();
+
+    return ProcessPosts([post]);
+}
+
 // timeframes for random posts
 const timeframes = [
     "hour", // 5% chance
@@ -313,5 +319,6 @@ async function reportPost(id, removedBy) {
 module.exports = {
     getNewPosts: getNewPosts,
     reportPost: reportPost,
-    getRandomPost: getRandomPost
+    getRandomPost: getRandomPost,
+    getPostById
 };
