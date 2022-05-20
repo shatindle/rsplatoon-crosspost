@@ -195,7 +195,7 @@ async function postRedditToDiscord(
             url: link,
             color: color,
             thumbnail: {
-                url: flairText === "Fan Art" ? null : imageUrl
+                url: flairText === "Fan Art" || flairText === "Art Contest" ? null : imageUrl
             },
             timestamp: new Date(timestamp * 1000).toISOString(),
             author: {
@@ -216,7 +216,7 @@ async function postRedditToDiscord(
             
             var message = await channel.send(contentToSend);
 
-            if (flairText === "Fan Art")
+            if (flairText === "Fan Art" || flairText === "Art Contest")
                 await postAttachments(
                     channelId,
                     [imageUrl]
