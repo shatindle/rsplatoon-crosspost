@@ -7,7 +7,7 @@ A Reddit and Discord bot that posts Reddit posts to Discord, specifically for r/
 - package-lock.json
 - .vscode
 - discord.json
-- rsplatoon-discord-firebase.json
+- firebase.json
 - settings.json
 
 # setup
@@ -15,7 +15,7 @@ A Reddit and Discord bot that posts Reddit posts to Discord, specifically for r/
 - run npm install
 - add a oauth_info.json (reddit config) file with your configs (use oauth_info.sample.json as an example)
 - add a discord.json (discord config) file with your bot token (use discord.sample.json as an example)
-- add rsplatoon-discord-firebase.json (google firebase config and cert) file with your firebase connection config
+- add firebase.json (google firebase config and cert) file with your firebase connection config
 - add settings.json (which reddit to use and which discord to channels to post to) (settings.sample.json is the example)
 - run npm start
 - you can wrap this in foreverjs if you want it to re-start itself automatically if it fails for any reason

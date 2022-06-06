@@ -1,8 +1,9 @@
 const Firestore = require('@google-cloud/firestore');
+const { project_id } = require("../firebase.json");
 
 const db = new Firestore({
-    projectId: 'rsplatoon-discord',
-    keyFilename: './rsplatoon-discord-firebase.json',
+    projectId: project_id,
+    keyFilename: './firebase.json',
 });
 
 const postCache = [];
