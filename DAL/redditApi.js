@@ -1,5 +1,6 @@
 const RedditApi = require("snoowrap");
 const oauth_info = require("../oauth_info.json");
+const { redditColors } = require("../settings.json");
 
 const reddit = new RedditApi(oauth_info);
 
@@ -46,24 +47,16 @@ async function asyncForEach(array, callback) {
 }
 
 // TODO: make this dynamic and based on the subreddit
-const supportedColors = {
-    "Image": parseInt("ffd635", 16),
-    "Video": parseInt("f08f44", 16),
-    "Stream": parseInt("f08f44", 16),
-    "Official News": parseInt("445fff", 16),
-    "Splatfest": parseInt("e549a8", 16),
-    "Discussion": parseInt("ff88bd", 16),
-    "Data": parseInt("349e48", 16),
-    "News": parseInt("5a0be6", 16),
-    "PSA": parseInt("00d5f9", 16),
-    "Satire": parseInt("738491", 16),
-    "Competitive": parseInt("cc0000", 16),
-    "Strategy": parseInt("cc0000", 16),
-    "Fan Art": parseInt("ffd635", 16),
-    "Meme": parseInt("738491", 16),
-    "Event": parseInt("5a0be6", 16),
-    "Salmon Run": parseInt("ff6a00", 16),
-    "Art Contest": parseInt("0bd598", 16)
+let supportedColors = {};
+
+if (redditColors) {
+    Object.keys(redditColors).forEach(redditColor => {
+        try {
+            supportedColors[redditColor] = parseInt(redditColors[redditColor], 16);
+        } catch (err) {
+            console.log(`Could not parse color: ${err.toString()}`);
+        }
+    });
 }
 
 /**
