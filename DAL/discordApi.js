@@ -157,7 +157,6 @@ function getBotId() {
  * @param {number} color The color of the flair
  * @param {number} timestamp The UTC epoch date the post was made
  * @param {string} flairText The text of the flair used in Reddit
- * @param {string} flairIcon The flair icon image for this flair
  * 
  * @returns {Promise<string>} The discord ID of the post
  */
@@ -172,7 +171,6 @@ async function postRedditToDiscord(
     color = 0, 
     timestamp = 0, 
     flairText = "", 
-    flairIcon = "", 
     interaction = null) {
 
     // handle discord links
@@ -204,7 +202,6 @@ async function postRedditToDiscord(
                 icon_url: authorIcon ? authorIcon : null
             },
             footer: {
-                //icon_url: flairIcon,
                 text: flairText
             }
         }]

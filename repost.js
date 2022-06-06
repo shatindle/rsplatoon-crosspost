@@ -135,8 +135,7 @@ async function repost(redditId) {
                 redditPost.authorIcon,
                 redditPost.color,
                 redditPost.postedOn,
-                redditPost.flairText,
-                redditPost.flairIcon);
+                redditPost.flairText);
 
             database.associateIds(redditPost.id, discordId);
         }

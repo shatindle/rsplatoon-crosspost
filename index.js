@@ -138,6 +138,8 @@ if (settings.discord.starboards) {
 }
 
 discordApi.onReady(() => {
+    if (settings.disableCommands) return;
+
     discordApi.addSlashCommand(
         "random", 
         "Pulls in a random submission from the subreddit.", 
@@ -168,7 +170,6 @@ discordApi.onReady(() => {
                 redditPost.color,
                 redditPost.postedOn,
                 redditPost.flairText,
-                redditPost.flairIcon,
                 interaction);
         }
     );
@@ -497,8 +498,7 @@ async function getNewPosts() {
                 redditPost.authorIcon,
                 redditPost.color,
                 redditPost.postedOn,
-                redditPost.flairText,
-                redditPost.flairIcon);
+                redditPost.flairText);
 
             database.associateIds(redditPost.id, discordId);
         }

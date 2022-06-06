@@ -37,9 +37,6 @@ class RedditPost {
 
     /** @description The color of the flair */
     color;
-
-    /** @description The flair icon to display for this type */
-    flairIcon;
 }
 
 async function asyncForEach(array, callback) {
@@ -55,7 +52,6 @@ const supportedColors = {
     "Stream": parseInt("f08f44", 16),
     "Official News": parseInt("445fff", 16),
     "Splatfest": parseInt("e549a8", 16),
-    //"Spoiler": parseInt("")
     "Discussion": parseInt("ff88bd", 16),
     "Data": parseInt("349e48", 16),
     "News": parseInt("5a0be6", 16),
@@ -68,27 +64,6 @@ const supportedColors = {
     "Event": parseInt("5a0be6", 16),
     "Salmon Run": parseInt("ff6a00", 16),
     "Art Contest": parseInt("0bd598", 16)
-}
-
-const flairIcons = {
-    "Image": "https://cdn.discordapp.com/attachments/752615708709617796/752629013704343562/image.png",
-    "Video": "https://cdn.discordapp.com/attachments/752615708709617796/752629017064243280/video.png",
-    "Stream": "https://cdn.discordapp.com/attachments/752615708709617796/752629021753475253/stream.png",
-    "Official News": "https://cdn.discordapp.com/attachments/752615708709617796/752629023749963876/tumblr.png",
-    "Splatfest": "https://cdn.discordapp.com/attachments/752615708709617796/752629026035728484/splatfest.png",
-    "Spoiler": "https://cdn.discordapp.com/attachments/752615708709617796/752629013704343562/image.png",
-    "Discussion": "https://cdn.discordapp.com/attachments/752615708709617796/752629019689877606/discussion.png",
-    "Data": "https://cdn.discordapp.com/attachments/752615708709617796/752629028095000777/data.png",
-    "News": "https://cdn.discordapp.com/attachments/752615708709617796/752629030032769125/news.png",
-    "PSA": "https://cdn.discordapp.com/attachments/752615708709617796/752629032272658442/psa.png",
-    "Satire": "https://cdn.discordapp.com/attachments/752615708709617796/752629034491576330/satire.png",
-    "Competitive": "https://cdn.discordapp.com/attachments/752615708709617796/752629959176224768/competitive.png",
-    "Strategy": "https://cdn.discordapp.com/attachments/752615708709617796/752629962527473726/strategy.png",
-    "Fan Art": "https://cdn.discordapp.com/attachments/752615708709617796/752630088456994866/fanart.png",
-    "Meme": "https://cdn.discordapp.com/attachments/752615708709617796/752629068503056445/meme.png",
-    "Event": "https://cdn.discordapp.com/attachments/752615708709617796/752629079450058872/event.png",
-    "Salmon Run": "https://cdn.discordapp.com/attachments/752615708709617796/752629074488459433/salmonrun.png",
-    "Art Contest": "https://cdn.discordapp.com/attachments/752615708709617796/752629013704343562/image.png"
 }
 
 /**
@@ -201,12 +176,6 @@ async function ProcessPosts(newPosts) {
             post.color = supportedColors[post.flairText];
         } else {
             post.color = 5427530;
-        }
-
-        if (flairIcons[post.flairText]) {
-            post.flairIcon = flairIcons[post.flairText];
-        } else {
-            post.flairIcon = "https://cdn.discordapp.com/attachments/752615708709617796/752629013704343562/image.png";
         }
 
         posts.push(post);
