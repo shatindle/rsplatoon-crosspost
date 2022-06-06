@@ -20,13 +20,9 @@ const artContestChannel = settings.discord.artcontest;
 
 const urlRegex = /(https?:\/\/[^ ]*)/g;
 
-const artFlair = [
-    "Fan Art"
-];
+const artFlair = settings.specialFlairs.art;
 
-const artContestFlair = [
-    "Art Contest"
-];
+const artContestFlair = settings.specialFlairs.contest;
 
 /** @description Gets the correct channel this post should go in
  * 
