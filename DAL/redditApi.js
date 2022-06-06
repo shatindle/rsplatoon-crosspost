@@ -274,7 +274,7 @@ async function reportPost(id, removedBy) {
     var post = await reddit.getSubmission(id);
 
     await post.report({
-        reason: "This post was removed from r/Splatoon Discord by " + removedBy
+        reason: "This post was removed from the Discord Server by " + removedBy
     });
 }
 

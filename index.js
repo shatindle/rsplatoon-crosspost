@@ -334,13 +334,8 @@ discordApi.onReady(() => {
     discordApi.registerSlashCommands();
 });
 
-const artFlair = [
-    "Fan Art"
-];
-
-const artContestFlair = [
-    "Art Contest"
-];
+const artFlair = settings.specialFlairs.art;
+const artContestFlair = settings.specialFlairs.contest;
 
 /** @description Gets the correct channel this post should go in
  * 
