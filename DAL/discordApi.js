@@ -213,11 +213,15 @@ async function postRedditToDiscord(
             
             var message = await channel.send(contentToSend);
 
-            if (settings.specialFlairs.art.indexOf(flairText) > -1 || settings.specialFlairs.contest.indexOf(flairText))
-                await postAttachments(
-                    channelId,
-                    [imageUrl]
-                );
+            try {
+                if (settings.specialFlairs.art.indexOf(flairText) > -1 || settings.specialFlairs.contest.indexOf(flairText))
+                    await postAttachments(
+                        channelId,
+                        [imageUrl]
+                    );
+            } catch (image_err) {
+                console.log(`unable to post image: ${image_err.toString()}`);
+            }
     
             // @ts-ignore
             return message.id;
