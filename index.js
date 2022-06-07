@@ -104,7 +104,6 @@ if (settings.discord.starboards) {
                                     message.author.avatarURL(),
                                     parseInt(board.color, 16),
                                     message.createdTimestamp / 1000,
-                                    "",
                                     ""
                                 );
                     
