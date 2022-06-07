@@ -215,7 +215,8 @@ async function postRedditToDiscord(
 
             try {
                 if (settings.specialFlairs.art.indexOf(flairText) > -1 || settings.specialFlairs.contest.indexOf(flairText))
-                    await postAttachments(
+                    // don't wait for this...
+                    postAttachments(
                         channelId,
                         [imageUrl]
                     );

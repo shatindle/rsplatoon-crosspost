@@ -108,7 +108,8 @@ if (settings.discord.starboards) {
                                 );
                     
                                 if (attachments.length > 0) {
-                                    await discordApi.postAttachments(
+                                    // don't wait for this...
+                                    discordApi.postAttachments(
                                         board.target,
                                         attachments
                                     );
