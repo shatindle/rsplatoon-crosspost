@@ -248,7 +248,6 @@ async function postTwitterToDiscord(
     tweetPingRole = null) {
 
     const contentToSend = {
-        content: tweetPingRole ? `<@&${tweetPingRole}>` : "",
         embeds: [{
             title: "News from @" + username,
             color,
@@ -256,6 +255,9 @@ async function postTwitterToDiscord(
             timestamp: createdOn
         }]
     };
+
+    if (tweetPingRole)
+        contentToSend.content = `<@&${tweetPingRole}>`;
 
     if (attachments && attachments.length > 0) {
         for (let i = 0; i < attachments.length; i++) {
