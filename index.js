@@ -9,11 +9,11 @@ const twitterApi = require("./DAL/twitterApi");
 const languageApi = require("./DAL/languageApi");
 const japaneseToEnglishSplatoonApi = require("./DAL/japaneseToEnglishSplatoonApi");
 
-const roles = settings.colorRoles;
-const roleColors = settings.colors;
-const inkRoles = settings.inkColorRoles;
-const inkRoleColors = settings.inkColors;
-const unmanagedRoles = settings.unmanagedColorRoles;
+const roles = settings.colorRoles ?? [];
+const roleColors = settings.colors ?? [];
+const inkRoles = settings.inkColorRoles ?? [];
+const inkRoleColors = settings.inkColors ?? [];
+const unmanagedRoles = settings.unmanagedColorRoles ?? [];
 
 const allRoles = roles.concat(inkRoles);
 const everyRole = allRoles.concat(unmanagedRoles);
@@ -346,7 +346,7 @@ function getChannel(flairText) {
     if (artFlair.indexOf(flairText) > -1)
         return artChannel;
 
-    if (artContestFlair.indexOf(flairText) > -1)
+    if (artContestFlair.indexOf(flairText) > -1 && artContestChannel)
         return artContestChannel;
 
     return generalChannel;
