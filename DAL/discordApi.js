@@ -193,7 +193,7 @@ async function postRedditToDiscord(
             url: link,
             color: color,
             thumbnail: {
-                url: settings.specialFlairs.art.indexOf(flairText) > -1 || settings.specialFlairs.contest.indexOf(flairText) > -1 ? null : imageUrl
+                url: settings.specialFlairs.art.indexOf(flairText) > -1 || settings.specialFlairs.contest.indexOf(flairText) > -1 ? imageUrl : null
             },
             timestamp: new Date(timestamp * 1000).toISOString(),
             author: {
@@ -214,7 +214,7 @@ async function postRedditToDiscord(
             var message = await channel.send(contentToSend);
 
             try {
-                if (settings.specialFlairs.art.indexOf(flairText) > -1 || settings.specialFlairs.contest.indexOf(flairText))
+                if (!(settings.specialFlairs.art.indexOf(flairText) > -1 || settings.specialFlairs.contest.indexOf(flairText)))
                     // don't wait for this...
                     postAttachments(
                         channelId,
