@@ -30,5 +30,8 @@ jobs:
           npm install
           npm audit fix || true
           pm2 stop rsplatoon-bot
+          pm2 stop rpokemonunite-bot
           cp -r $GITHUB_WORKSPACE/* /home/sha_tindle/repos/rsplatoon-crosspost
+          cp -r $GITHUB_WORKSPACE/* /home/sha_tindle/repos/rpokemonunite-crosspost
           pm2 start rsplatoon-bot
+          pm2 start rpokemonunite-bot
