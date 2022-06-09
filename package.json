@@ -30,10 +30,11 @@
     "@discordjs/rest": "^0.1.0-canary.0",
     "@google-cloud/firestore": "^5.0.2",
     "@google-cloud/translate": "^6.3.1",
+    "abort-controller": "^3.0.0",
     "discord-api-types": "^0.24.0",
     "discord.js": "^13.6.0",
-    "firebase-admin": "^10.1.0",
-    "node-fetch": "^2.6.1",
+    "firebase-admin": "^10.2.0",
+    "node-fetch": "^2.6.7",
     "snoowrap": "^1.22.0",
     "twitter-api-v2": "^1.9.1"
   },
