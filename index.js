@@ -2,12 +2,43 @@ const discordApi = require("./DAL/discordApi");
 const redditApi = require("./DAL/redditApi");
 const database = require("./DAL/databaseApi");
 const databaseApi = require("./DAL/databaseApi");
-const profileApi = require("./DAL/profileApi");
 const settings = require("./settings.json");
-const { MessageActionRow, MessageButton, MessageAttachment } = require("discord.js");
 const twitterApi = require("./DAL/twitterApi");
 const languageApi = require("./DAL/languageApi");
 const japaneseToEnglishSplatoonApi = require("./DAL/japaneseToEnglishSplatoonApi");
+const { Collection } = require("discord.js");
+const { token } = require("./discord.json");
+
+const fs = require('fs');
+
+discordApi.client.commands = new Collection();
+const publicCommandFiles = fs.readdirSync('./commands/public').filter(file => file.endsWith('.js'));
+const privateCommandFiles = fs.readdirSync('./commands/private').filter(file => file.endsWith('.js'));
+
+for (const file of publicCommandFiles) {
+	const command = require(`./commands/public/${file}`);
+	discordApi.client.commands.set(command.data.name, command);
+}
+
+for (const file of privateCommandFiles) {
+	const command = require(`./commands/private/${file}`);
+	discordApi.client.commands.set(command.data.name, command);
+}
+
+discordApi.client.on('interactionCreate', async interaction => {
+	if (!interaction.isCommand()) return;
+
+	const command = discordApi.client.commands.get(interaction.commandName);
+
+	if (!command) return;
+
+	try {
+		await command.execute(interaction);
+	} catch (error) {
+		console.error(error);
+		await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+	}
+});
 
 const roles = settings.colorRoles ?? [];
 const roleColors = settings.colors ?? [];
@@ -16,7 +47,6 @@ const inkRoleColors = settings.inkColors ?? [];
 const unmanagedRoles = settings.unmanagedColorRoles ?? [];
 
 const allRoles = roles.concat(inkRoles);
-const everyRole = allRoles.concat(unmanagedRoles);
 
 // test subreddit
 const subReddit = settings.subReddit;
@@ -40,8 +70,6 @@ discordApi.onDelete(async (messageId, guild, deletedBy) => {
     }
 });
 
-var lastMessageTimestamp = null;
-
 // TODO: remove this if we change how we manage colormes
 discordApi.onMessage(async (message) => {
     if (!unmanagedRoles || unmanagedRoles.length === 0)
@@ -55,283 +83,98 @@ discordApi.onMessage(async (message) => {
     }
 });
 
-if (settings.discord.starboards) {
-    discordApi.onReaction(async function(reaction, user) {
-        if (reaction.message.author.bot) return;
+const DAYS_AGO = 30;
 
-        if (settings.discord.starboards) {
-            for (let board of Object.values(settings.discord.starboards)) {
-                if (board.sources && board.sources.indexOf(reaction.message.channel.id) > -1) {
-                    if (reaction.emoji.id === board.upvote) {
-                        // the channel and emoji matched
-                        if (reaction.count >= board.count) {
-                            let message = reaction.message;
-
-                            // TODO: pass the channel
-                            if (await databaseApi.getItemFromFridge(message.id, message.guild.id))
-                                // it's already on the fridge
-                                return; 
-
-                                // create the fridge entry
-                            let attachments = [];
-
-                            message.attachments.forEach(function(a) {
-                                attachments.push(a.url);
-                            });
-
-                            // create the links entry
-                            let links = "";
-                            
-                            try {
-                                if (message.content) {
-                                    message.content.match(urlRegex).forEach((urlMatch) => {
-                                        // Do something with each element
-                                        links += urlMatch + " ";
-                                    });
-                                }
-                            } catch (err) { 
-                                console.log("problem extracting link: " + err); 
-                            }
-
-                            try {
-                                await discordApi.postRedditToDiscord(
-                                    board.target,
-                                    "Source",
-                                    message.content,
-                                    "",
-                                    message.url,
-                                    message.author.tag,
-                                    message.author.avatarURL(),
-                                    parseInt(board.color, 16),
-                                    message.createdTimestamp / 1000,
-                                    ""
-                                );
-                    
-                                if (attachments.length > 0) {
-                                    // don't wait for this...
-                                    discordApi.postAttachments(
-                                        board.target,
-                                        attachments
-                                    );
-                                }
-                                
-                                if (links !== "") {
-                                    await discordApi.postText(
-                                        board.target,
-                                        links
-                                    );
-                                }
-                            } catch (err) { }
-            
-                            try {
-                                await databaseApi.postToFridge(message.id, message.guild.id);
-                            } catch (err) { console.log(err); }       
-                        }
-
-                        // if we're here, exit because the emoji matched
-                        return;
-                    }
-                }
-            }
-        }
-    });
+function getDateXDaysAgo(numOfDays, date = new Date()) {
+    const daysAgo = new Date(date.getTime());
+  
+    daysAgo.setDate(date.getDate() - numOfDays);
+  
+    return daysAgo;
 }
 
-discordApi.onReady(() => {
-    if (settings.disableCommands) return;
+discordApi.onReaction(async function(reaction, user) {
+    if (reaction.message.author.bot) return;
 
-    discordApi.addSlashCommand(
-        "random", 
-        "Pulls in a random submission from the subreddit.", 
-        [],
-        async (interaction) => {
-            // check for ratelimit
-            var postedOn = new Date();
-    
-            if (lastMessageTimestamp !== null && Math.abs(postedOn - lastMessageTimestamp) < 5000) {
-                return await discordApi.rateLimit(interaction.channel_id, interaction);
-            }
-    
-            lastMessageTimestamp = postedOn;
-    
-            // get a random post
-            var posts = await redditApi.getRandomPost(subReddit);
-    
-            var redditPost = posts[0];
-    
-            await discordApi.postRedditToDiscord(
-                interaction.channel_id, 
-                redditPost.title, 
-                redditPost.text, 
-                redditPost.image, 
-                redditPost.link, 
-                redditPost.author, 
-                redditPost.authorIcon,
-                redditPost.color,
-                redditPost.postedOn,
-                redditPost.flairText,
-                interaction);
-        }
-    );
+    // if the post is older than 30 days ago, ignore it
+    if (reaction.message.createdTimestamp < getDateXDaysAgo(DAYS_AGO).valueOf()) return;
 
-    discordApi.addSlashCommand(
-        "paruko",
-        "The Paruko Fan gumball machine! Use it to get a Paruko color. Color changes daily.",
-        [{
-            name: "action",
-            type: "string",
-            description: "Use the gumball machine or remove the role",
-            choices: [
-                {
-                    name: "Gumball",
-                    value: "gumball"
-                }, {
-                    name: "Remove",
-                    value: "remove"
-                }
-            ],
-            required: true
-        }],
-        async (interaction) => {
-            var action = interaction.options.getString("action");
+    // genericize this
+    if (settings.discord.starboards) {
+        for (let board of Object.values(settings.discord.starboards)) {
+            if (board.sources && board.sources.indexOf(reaction.message.channel.id) > -1) {
+                if (reaction.emoji.id === board.upvote) {
+                    // the channel and emoji matched
+                    if (reaction.count >= board.count) {
+                        let message = reaction.message;
 
-            switch (action) {
-                case "gumball":
-                    await discordApi.addColorRoles(roles, interaction.member.id, everyRole);
-                    interaction.editReply("You've got a new Paruko Fan role!");
-                    break;
-                case "remove":
-                    await discordApi.removeColorRoles(allRoles, interaction.member.id);
-                    interaction.editReply("You are no longer a Paruko Fan.");
-                    break;
-            }
-        }
-    );
+                        // TODO: pass the channel
+                        if (await databaseApi.getItemFromFridge(message.id, message.guild.id))
+                            // it's already on the fridge
+                            return; 
 
-    discordApi.addSlashCommand(
-        "choose",
-        "Join Team Alpha, Team Bravo, or leave the team.  Role colors change daily.",
-        [{
-            name: "team",
-            type: "string",
-            description: "Pick a team or remove the role",
-            choices: [
-                {
-                    name: "Alpha",
-                    value: "alpha"
-                }, {
-                    name: "Bravo",
-                    value: "bravo"
-                }, {
-                    name: "Leave",
-                    value: "leave"
-                }
-            ],
-            required: true
-        }],
-        async (interaction) => {
-            var team = interaction.options.getString("team");
+                            // create the fridge entry
+                        let attachments = [];
 
-            switch (team) {
-                case "alpha":
-                    await discordApi.addColorRoles([inkRoles[0]], interaction.member.id, everyRole);
-                    await interaction.editReply("You've joined the Alpha Team!");
-                    break;
-                case "bravo":
-                    await discordApi.addColorRoles([inkRoles[1]], interaction.member.id, everyRole);
-                    await interaction.editReply("You've joined the Bravo Team!");
-                    break;
-                case "leave":
-                    await discordApi.removeColorRoles(allRoles, interaction.member.id);
-                    await interaction.editReply("You've left the team!");
-                    break;
-            }
-        }
-    );
+                        message.attachments.forEach(function(a) {
+                            attachments.push(a.url);
+                        });
 
-    discordApi.addSlashCommand(
-        "profile",
-        "Manage your profile!  Take your link with you wherever you go!  It even works outside of Discord.",
-        [{
-            subcommand: true,
-            name: "friendcode",
-            description: "Edit your friend code",
-            parameters: [{
-                name: "value",
-                type: "string",
-                description: "Your friend code",
-                required: true
-            }]
-        }, {
-            name: "get",
-            description: "Get another user's profile",
-            subcommand: true,
-            parameters: [{
-                name: "user",
-                type: "user",
-                description: "The user for the profile lookup",
-                required: true
-            }]
-        }, {
-            name: "me",
-            description: "Get your own profile",
-            subcommand: true
-        }], 
-        async (interaction) => {
-            var subcommand = interaction.options._subcommand;
-
-            if (subcommand === "friendcode") {
-                const value = interaction.options.getString("value");
-
-                var response = await profileApi.setProfile(interaction.member.id, value);
-
-                if (response.result === "updated")
-                    await interaction.editReply(`Updated your friend code! To update your username or drip, visit https://profile.rsplatoon.com`);
-                else if (response.result)
-                    await interaction.editReply("Error updating friend code: " + response.result);
-                else 
-                    await interaction.editReply("Error updating friend code: unknown error");
-            } else {
-                var userToLookup = interaction.member;
-
-                var otherUser = interaction.options.getUser("user");
-
-                if (otherUser)
-                    userToLookup = otherUser;
-
-                var response = await profileApi.getProfile(userToLookup.id);
-
-                if (response.friendCode) {
-                    if (response.profileId) {
-                        var row = new MessageActionRow()
-                            .addComponents(
-                                new MessageButton()
-                                    .setURL(settings.profile.url + settings.profile.get + "/" + response.profileId + "?_v=" + new Date().valueOf())
-                                    .setLabel("Full Profile")
-                                    .setStyle("LINK")
-                            );
-
-                        const attachments = [];
-
-                        if (response.card && response.card !== "NONE") {
-                            const profileCard = new MessageAttachment(response.card);
-                            attachments.push(profileCard);
+                        // create the links entry
+                        let links = "";
+                        
+                        try {
+                            if (message.content) {
+                                message.content.match(urlRegex).forEach((urlMatch) => {
+                                    // Do something with each element
+                                    links += urlMatch + " ";
+                                });
+                            }
+                        } catch (err) { 
+                            console.log("problem extracting link: " + err); 
                         }
 
-                        await interaction.editReply({ content: "<@" + userToLookup.id + ">\n**Friend code:** \n" + response.friendCode, components: [row], files: attachments });
-                        
-
-                    } else {
-                        await interaction.editReply("<@" + userToLookup.id + ">\n**Friend code:** \n" + response.friendCode);
+                        try {
+                            await discordApi.postRedditToDiscord(
+                                board.target,
+                                "Source",
+                                message.content,
+                                "",
+                                message.url,
+                                message.author.tag,
+                                message.author.avatarURL(),
+                                parseInt(board.color, 16),
+                                message.createdTimestamp / 1000,
+                                ""
+                            );
+                
+                            if (attachments.length > 0) {
+                                // don't wait for this...
+                                discordApi.postAttachments(
+                                    board.target,
+                                    attachments
+                                );
+                            }
+                            
+                            if (links !== "") {
+                                await discordApi.postText(
+                                    board.target,
+                                    links
+                                );
+                            }
+                        } catch (err) { }
+        
+                        try {
+                            await databaseApi.postToFridge(message.id, message.guild.id);
+                        } catch (err) { console.log(err); }       
                     }
-                } else {
-                    await interaction.editReply("Friend code not set");
+
+                    // if we're here, exit because the emoji matched
+                    return;
                 }
             }
         }
-    )
-
-    discordApi.registerSlashCommands();
+    }
 });
 
 const artFlair = settings.specialFlairs.art;
@@ -365,6 +208,7 @@ function timeDiffMinutes(earlyDate, lateDate) {
     return Math.abs(Math.round(diff));
 }
 
+// this is just for the main server
 function colorOffset() {
     var now = new Date();
     var fullDaysSinceEpoch = Math.floor(now/8.64e7);
@@ -375,6 +219,7 @@ function colorOffset() {
     return 0;
 }
 
+// this is just for the main server
 async function changeRoleColors() {
     // change Paruko Fan role colors
     // only do this if it's setup and it's Sunday
@@ -500,9 +345,11 @@ async function getNewPosts() {
     }
 }
 
+// database activity cleanup 
 async function cleanUp() {
     try {
         await databaseApi.cleanupOldAssociations();
+        // TODO: put the logic for the cleaning out the fridge here
     } catch (err) {
         console.log("Error cleaning up: " + err);
     }
@@ -516,6 +363,7 @@ const splatoon3Colors = [
     16484158  // #fb873e
 ];
 
+// this is just for the main server
 async function crossPostTweets() {
     try {
         if (!settings.twitters) return;
@@ -558,18 +406,24 @@ async function crossPostTweets() {
     }
 }
 
-// run on startup, then run once per minute
-setTimeout(getNewPosts, 6000);
-var interval = setInterval(getNewPosts, 60000);
 
-// changeRoleColors();
-setTimeout(changeRoleColors, 5000);
-var interval2 = setInterval(changeRoleColors, 86400000);
 
-// clean up database
-setTimeout(cleanUp, 5000);
-var interval3 = setInterval(cleanUp, 86400000);
+discordApi.client.once("ready", async () => {
+    // run on startup, then run once per minute
+    await getNewPosts();
+    setInterval(getNewPosts, 60000);
 
-// cross post tweets once per minute
-setTimeout(crossPostTweets, 5000);
-var interval4 = setInterval(crossPostTweets, 60000);
+    // changeRoleColors();
+    await changeRoleColors();
+    setInterval(changeRoleColors, 86400000);
+
+    // clean up database
+    await cleanUp();
+    setInterval(cleanUp, 86400000);
+
+    // cross post tweets once per minute
+    await crossPostTweets();
+    setInterval(crossPostTweets, 60000);
+});
+
+discordApi.client.login(token);

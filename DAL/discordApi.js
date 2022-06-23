@@ -1,22 +1,16 @@
-const DiscordApi = require('discord.js');
-const { SlashCommandBuilder } = require("@discordjs/builders");
-const { REST } = require('@discordjs/rest');
-const { Routes } = require('discord-api-types/v9');
+const { Client, Intents, Message, MessageReaction, User} = require('discord.js');
 const fetchWithTimeout = require("./fetchWithTimeout");
 
-const discord = new DiscordApi.Client({ 
+const discord = new Client({ 
     intents: [
-        DiscordApi.Intents.FLAGS.GUILDS,
-        DiscordApi.Intents.FLAGS.GUILD_MESSAGES,
-        DiscordApi.Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
-        
-        // TODO: remove after event
-        DiscordApi.Intents.FLAGS.GUILD_MEMBERS
+        Intents.FLAGS.GUILDS,
+        Intents.FLAGS.GUILD_MESSAGES,
+        Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
+        Intents.FLAGS.GUILD_MEMBERS
     ], 
     partials: ['MESSAGE', 'CHANNEL', 'REACTION'] 
 });
 
-const { token, clientId } = require('../discord.json');
 const settings = require("../settings.json");
 const thisGuild = settings.guild;
 
@@ -32,22 +26,6 @@ var messageCallbacks = [];
 
 // the list of interactions we support via slash commands
 var interactionCallbacks = {};
-
-// functions that will run after a successful login (but only once)
-var readyCallbacks = [];
-
-// successful login has completed
-var initialized = false;
-
-// login to discord - we should auto reconnect automatically
-discord.login(token).then(() => {
-    if (initialized) return;
-
-    for (var i = 0; i < readyCallbacks.length; i++)
-        readyCallbacks[i]();
-
-    initialized = true;
-});
 
 /** 
  * @description The callback function to execute for a deleted post
@@ -66,20 +44,9 @@ async function onReactionCallback(reaction, user) { }
 
 /** 
  * @description The callback function to execute for a message post
- * @param {DiscordApi.Message} message The Discord message
+ * @param {Message} message The Discord message
  */
 function onMessageCallback(message) { }
-
-/**
- * @description The callback function to execute for an interaction from a slash command
- * @param {string} message The message to interact with
- */
-function onInteractionCallback(message) { }
-
-/**
- * @description The callback that will happen when the login is initialized for the first time
- */
-function onReadyCallback() { }
 
 /** 
  * @description Add a function to ondelete callback
@@ -99,14 +66,6 @@ function onMessage(callback = onMessageCallback) {
 
 function onReaction(callback = onReactionCallback) {
     reactionCallbacks.push(callback);
-}
-
-/**
- * @description A function that will be called when the login method has completed
- * @param {onReadyCallback} callback A function that will be called when the discord client has logged in successfully
- */
-function onReady(callback = onReadyCallback) {
-    readyCallbacks.push(callback);
 }
 
 /** 
@@ -246,7 +205,7 @@ async function postRedditToDiscord(
     } else {
         // this is sending an interaction
         // respond directly to the interaction
-        await interaction.editReply(contentToSend);
+        await interaction.reply(contentToSend);
     }
 }
 
@@ -366,7 +325,7 @@ async function rateLimit(channelId = "", interaction = null) {
         var item = rateLimitMessages[Math.floor(Math.random() * rateLimitMessages.length)];
 
         if (interaction) {
-            await interaction.editReply(item);
+            await interaction.reply(item);
         } else {
             var channel = await discord.channels.fetch(channelId);
         
@@ -473,146 +432,6 @@ async function removeColorRoles(roles, userId) {
     await member.roles.remove(roles);
 }
 
-const commands = [];
-
-/**
- * @description Registers a slash command for the bot (only needs to be run once)
- * @param {string} name The slash command name
- * @param {string} description User friendly description of the slash command
- * @param {Array<Object>} parameters [{ name: "", type: "", description: "", required: bool, choices: [] }]
- * @param {Function} responseCallback A callback function that will be given the interaction
- */
-function addSlashCommand(name = "", description = "", parameters = [], responseCallback = onInteractionCallback, subcommand = false) {
-    if (interactionCallbacks[name] && !subcommand)
-        throw "Only one interaction register is allowed per slash command";
-
-    // for backwards compatibility
-    if (!thisGuild)
-        return;
-
-    if (!name || !description)
-        throw "Name and description are required for registering a function";
-
-    var data = new SlashCommandBuilder();
-
-    createCommand(data, name, description, parameters);
-
-    commands.push(data.toJSON());
-
-    interactionCallbacks[name] = responseCallback;
-}
-
-/**
- * 
- * @param {SlashCommandBuilder} data The command builder to attach to
- * @param {String} name The name of the command or sub command
- * @param {String} description The name of the command description
- * @param {Array<Object>} parameters  [{ name: "", type: "", description: "", required: bool, choices: [] }]
- */
-function createCommand(data, name, description, parameters) {
-    data.setName(name)
-        .setDescription(description);
-
-    if (parameters && parameters.length) {
-        for (var i = 0; i < parameters.length; i++) {
-            if (parameters[i].name && (parameters[i].type || parameters[i].subcommand) && parameters[i].description) {
-                if (parameters[i].subcommand) {
-                    data.addSubcommand(subcommand => {
-                        return createCommand(
-                            subcommand, 
-                            parameters[i].name, 
-                            parameters[i].description, 
-                            parameters[i].parameters);
-                    })
-                } else {
-                    addParameters(parameters[i], data);
-                }
-            } else {
-                throw "Missing required parameters";
-            }
-        }
-    }
-
-    return data;
-}
-
-/**
- * 
- * @param {Array<Object>} parameter The parameter to add
- * @param {SlashCommandBuilder} data The command to add the parameter to
- */
-function addParameters(parameter, data) {
-    var opt = function (option) {
-        option.setName(parameter.name);
-        option.setDescription(parameter.description);
-
-        if (parameter.required)
-            option.setRequired(true);
-
-        if (parameter.choices && parameter.choices.length) {
-            for (var x = 0; x < parameter.choices.length; x++) {
-                if (parameter.choices[x].name && parameter.choices[x].value)
-                    option.addChoice(parameter.choices[x].name, parameter.choices[x].value);
-                else if (parameter.choices[x].name)
-                    option.addChoice(parameter.choices[x].name, parameter.choices[x].name);
-                else if (parameter.choices[x].value)
-                    option.addChoice(parameter.choices[x].value, parameter.choices[x].value);
-                else 
-                    throw "Missing choices";
-            }
-        }
-
-        return option;
-    };
-
-    switch (parameter.type) {
-        case "bool": 
-        case "boolean": 
-            data.addBooleanOption(opt);
-            break;
-        case "channel":
-            data.addChannelOption(opt);
-            break;
-        case "int":
-        case "integer":
-            data.addIntegerOption(opt);
-            break;
-        case "mention":
-        case "mentionable":
-            data.addMentionableOption(opt);
-            break;
-        case "number":
-        case "num":
-            data.addNumberOption(opt);
-            break;
-        case "role":
-            data.addRoleOption(opt);
-            break;
-        case "string":
-        case "str":
-            data.addStringOption(opt);
-            break;
-        case "user":
-            data.addUserOption(opt);
-
-    }
-}
-
-var alreadyRun = false;
-
-async function registerSlashCommands() {
-    if (alreadyRun)
-        throw "Registration of commands has already happened";
-
-    alreadyRun = true;
-
-    const rest = new REST({ version: '9' }).setToken(token);
-
-    await rest.put(Routes.applicationGuildCommands(clientId, thisGuild), { body: commands });
-
-    console.log("commands registered");
-}
-
 // TODO: delete when done
 async function giveRole(memberId) {
     var guild = discord.guilds.cache.get(thisGuild);
@@ -702,25 +521,6 @@ discord.on('messageDelete', async message => {
     }
 });
 
-// handle slash commands
-discord.on('interactionCreate', async interaction => {
-    if (!interaction.isCommand()) return;
-
-    try {
-        var responseCallbacks = interactionCallbacks[interaction.commandName];
-
-        if (!responseCallbacks) {
-            await interaction.reply("Error: Unknown command issued");
-            return;
-        }
-
-        // respond with a pong
-        await interaction.deferReply();
-
-        await responseCallbacks(interaction);
-    } catch { }
-});
-
 // handle reactions
 discord.on("messageReactionAdd", async (reaction, user) => {
     // When a reaction is received, check if the structure is partial
@@ -740,29 +540,23 @@ discord.on("messageReactionAdd", async (reaction, user) => {
             await reactionCallbacks[i](reaction, user);
         } catch { }
     }
-    // // Now the message has been cached and is fully available
-    // console.log(`${reaction.message.author}'s message "${reaction.message.content}" gained a reaction!`);
-    // // The reaction is now also fully available and the properties will be reflected accurately:
-    // console.log(`${reaction.count} user(s) have given the same reaction to this message!`);
 });
 
 module.exports = {
-    onDelete: onDelete,
-    postRedditToDiscord: postRedditToDiscord,
-    getMessageHistory: getMessageHistory,
-    getBotId: getBotId,
-    onMessage: onMessage,
-    postHelp: postHelp,
-    rateLimit: rateLimit,
-    addSlashCommand: addSlashCommand,
-    registerSlashCommands: registerSlashCommands,
-    onReady: onReady,
-    onReaction: onReaction,
-    postAttachments: postAttachments,
-    postText: postText,
-    changeRoleColor: changeRoleColor,
-    toggleColorRoles: toggleColorRoles,
-    removeColorRoles: removeColorRoles,
-    addColorRoles: addColorRoles,
-    postTwitterToDiscord
+    onDelete,
+    postRedditToDiscord,
+    getMessageHistory,
+    getBotId,
+    onMessage,
+    postHelp,
+    rateLimit,
+    onReaction,
+    postAttachments,
+    postText,
+    changeRoleColor,
+    toggleColorRoles,
+    removeColorRoles,
+    addColorRoles,
+    postTwitterToDiscord,
+    client: discord
 };
