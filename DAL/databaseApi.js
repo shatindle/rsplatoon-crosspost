@@ -138,6 +138,18 @@ async function cleanupOldAssociations() {
     });
 }
 
+async function cleanupTheFridge() {
+    // delete documents older than 31 days
+    const date = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000);
+    const firestoreDate = Firestore.Timestamp.fromDate(date);
+
+    const docsToDelete = await db.collection("artfridge").where("createdOn", "<", firestoreDate).get();
+
+    docsToDelete.forEach(element => {
+        element.ref.delete();
+    });
+}
+
 async function postToFridge(messageId, guildId) {
     var record = {
         messageId: messageId,
@@ -177,6 +189,7 @@ module.exports = {
     postToFridge,
     getItemFromFridge,
     cleanupOldAssociations,
+    cleanupTheFridge,
     findByTwitterId,
     saveTweet
 };

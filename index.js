@@ -349,7 +349,7 @@ async function getNewPosts() {
 async function cleanUp() {
     try {
         await databaseApi.cleanupOldAssociations();
-        // TODO: put the logic for the cleaning out the fridge here
+        await databaseApi.cleanupTheFridge();
     } catch (err) {
         console.log("Error cleaning up: " + err);
     }
