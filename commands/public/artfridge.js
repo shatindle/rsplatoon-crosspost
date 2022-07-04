@@ -40,8 +40,14 @@ async function install(interaction) {
     let currentStarboard = fridges[guildId] ? fridges[guildId].fridges : null;
 
     // verify the target does not already have a starboard
-    if (currentStarboard && currentStarboard.filter(t => t.target === toId) > 0) {
+    if (currentStarboard && currentStarboard.filter(t => t.target === toId).length > 0) {
         await interaction.reply({ content: "Error: The 'to' channel is already a starboard.  Each channel can only be 1 starboard target." });
+        return;
+    }
+
+    // verify the source does not already have a starboard
+    if (currentStarboard && currentStarboard.filter(t => t.sources.indexOf(fromId) > -1).length > 0) {
+        await interaction.reply({ content: "Error: The 'from' channel is already a source for a starboard.  Each channel can only be 1 starboard source." });
         return;
     }
 
@@ -145,6 +151,15 @@ async function add(interaction) {
 
     if (serverFridges.fridges[targetIndex].sources.filter((source) => source === fromId).length > 0) {
         await interaction.reply({ content: "Error: This channel is already a source for this fridge." });
+        return;
+    }
+
+    // get current starboards
+    let currentStarboard = serverFridges.fridges;
+
+    // verify the source does not already have a starboard
+    if (currentStarboard.filter(t => t.sources.indexOf(fromId).length > -1).length > 0) {
+        await interaction.reply({ content: "Error: The 'from' channel is already a source for a starboard.  Each channel can only be 1 starboard source." });
         return;
     }
 

@@ -8,6 +8,7 @@ const languageApi = require("./DAL/languageApi");
 const japaneseToEnglishSplatoonApi = require("./DAL/japaneseToEnglishSplatoonApi");
 const { Collection } = require("discord.js");
 const { token } = require("./discord.json");
+const { fridges } = require("./DAL/fridgeApi");
 
 const fs = require('fs');
 
@@ -99,21 +100,21 @@ discordApi.onReaction(async function(reaction, user) {
     // if the post is older than 30 days ago, ignore it
     if (reaction.message.createdTimestamp < getDateXDaysAgo(DAYS_AGO).valueOf()) return;
 
-    // genericize this
-    if (settings.discord.starboards) {
-        for (let board of Object.values(settings.discord.starboards)) {
+    const guildId = reaction.message.guild.id;
+
+    if (fridges && fridges[guildId] && fridges[guildId].fridges) {
+        for (let board of fridges[guildId].fridges) {
             if (board.sources && board.sources.indexOf(reaction.message.channel.id) > -1) {
                 if (reaction.emoji.id === board.upvote) {
                     // the channel and emoji matched
                     if (reaction.count >= board.count) {
                         let message = reaction.message;
 
-                        // TODO: pass the channel
                         if (await databaseApi.getItemFromFridge(message.id, message.guild.id))
                             // it's already on the fridge
                             return; 
 
-                            // create the fridge entry
+                        // create the fridge entry
                         let attachments = [];
 
                         message.attachments.forEach(function(a) {
