@@ -150,6 +150,70 @@ async function cleanupTheFridge() {
     });
 }
 
+async function createFridge(guildId, source, target, upvote, count, color, createdBy) {
+    const createdOn = Firestore.Timestamp.now();
+
+    const record = {
+        sources: [source],
+        target, 
+        upvote,
+        count,
+        color,
+        createdBy,
+        createdOn
+    };
+
+    const doc = await db.collection("fridges").doc(guildId).get();
+
+    if (doc.exists) {
+        const data = doc.data();
+        data.fridges = [
+            ...data.fridges,
+            record
+        ];
+
+        await db.collection("fridges").doc(guildId).set(data);
+    } else {
+        await db.collection("fridges").doc(guildId).set({
+            fridges: [record],
+            guildId,
+            createdOn
+        });
+    }
+}
+
+async function removeFridge(guildId, index) {
+    const doc = await db.collection("fridges").doc(guildId).get();
+
+    const data = doc.data();
+    data.fridges.splice(index, 1);
+
+    if (data.fridges.length === 0) {
+        // delete the full record
+        await doc.ref.delete();
+    } else {
+        await db.collection("fridges").doc(guildId).set(data);
+    }
+}
+
+async function addFridgeSource(guildId, index, source) {
+    const doc = await db.collection("fridges").doc(guildId).get();
+
+    const data = doc.data();
+    data.fridges[index].sources.push(source);
+
+    await db.collection("fridges").doc(guildId).set(data);
+}
+
+async function removeFridgeSource(guildId, index, source) {
+    const doc = await db.collection("fridges").doc(guildId).get();
+
+    const data = doc.data();
+    data.fridges[index].sources.splice(data.fridges[index].sources.indexOf(source), 1);
+
+    await db.collection("fridges").doc(guildId).set(data);
+}
+
 async function postToFridge(messageId, guildId) {
     var record = {
         messageId: messageId,
@@ -181,6 +245,47 @@ async function markReported(redditId, deletedBy) {
     });
 }
 
+const callbacks = {};
+
+function monitor(type, callback) {
+    if (!callbacks[type]) callbacks[type] = [];
+
+    callbacks[type].push(callback);
+
+    setupObservers();
+}
+
+const observers = {};
+
+function setupObservers() {
+    for (let observer of Object.keys(callbacks)) {
+        if (!observers[observer] && callbacks[observer] && callbacks[observer].length > 0)
+            observers[observer] = configureObserver(observer, callbacks[observer]);
+    }
+}
+
+function configureObserver(type, callbackGroup) {
+    return db.collection(type).onSnapshot(async querySnapshot => {
+        let changes = {
+            added: [],
+            modified: [],
+            removed: []
+        };
+    
+        querySnapshot.docChanges().forEach(change => {
+            changes[change.type].push({...change.doc.data(), _id:change.doc.id});
+        });
+    
+        for (let i = 0; i < callbackGroup.length; i++) {
+            try {
+                await callbackGroup[i].call(null, changes);
+            } catch (err) {
+                console.log(`Error in callback ${i} of ${type}: ${err.toString()}`);
+            }
+        }
+    });
+}
+
 module.exports = {
     findByRedditId,
     findByDiscordId,
@@ -191,5 +296,11 @@ module.exports = {
     cleanupOldAssociations,
     cleanupTheFridge,
     findByTwitterId,
-    saveTweet
+    saveTweet,
+
+    monitor,
+    createFridge,
+    removeFridge,
+    addFridgeSource,
+    removeFridgeSource
 };
