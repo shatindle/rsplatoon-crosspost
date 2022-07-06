@@ -153,7 +153,7 @@ async function postRedditToDiscord(
             url: link,
             color: color,
             thumbnail: {
-                url: settings.specialFlairs.art.indexOf(flairText) > -1 || settings.specialFlairs.contest.indexOf(flairText) > -1 ? imageUrl : null
+                url: (settings.specialFlairs.art.indexOf(flairText) > -1 || settings.specialFlairs.contest.indexOf(flairText) > -1) && imageUrl ? imageUrl : null
             },
             timestamp: new Date(timestamp * 1000).toISOString(),
             author: {
