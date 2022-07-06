@@ -173,28 +173,30 @@ async function postRedditToDiscord(
             
             var message = await channel.send(contentToSend);
 
-            try {
-                let isImage = false;
+            if (imageUrl) {
                 try {
-                    var imgtest = await fetchWithTimeout(imageUrl, {
-                        method: "HEAD", 
-                        timeout: 1000
-                    });
-
-                    if (imgtest.headers.get("Content-Type").indexOf("image/") > -1)
-                        isImage = true;
-                } catch (fail_img_check) {
-                    // nothing to do
+                    let isImage = false;
+                    try {
+                        var imgtest = await fetchWithTimeout(imageUrl, {
+                            method: "HEAD", 
+                            timeout: 1000
+                        });
+    
+                        if (imgtest.headers.get("Content-Type").indexOf("image/") > -1)
+                            isImage = true;
+                    } catch (fail_img_check) {
+                        // nothing to do
+                    }
+    
+                    if (isImage)
+                        // don't wait for this...
+                        postAttachments(
+                            channelId,
+                            [imageUrl]
+                        );
+                } catch (image_err) {
+                    console.log(`unable to post image: ${image_err.toString()}`);
                 }
-
-                if (isImage)
-                    // don't wait for this...
-                    postAttachments(
-                        channelId,
-                        [imageUrl]
-                    );
-            } catch (image_err) {
-                console.log(`unable to post image: ${image_err.toString()}`);
             }
     
             // @ts-ignore
@@ -265,7 +267,7 @@ async function postTwitterToDiscord(
         // @ts-ignore
         return message.id;
     } catch (err) {
-        console.log("offending link: " + imageUrl);
+        console.log("offending link: " + err.toString());
     }
 }
 
