@@ -364,6 +364,17 @@ const splatoon3Colors = [
     16484158  // #fb873e
 ];
 
+const twitterFilters = {};
+
+// get the twitter filters into memory so we don't need to rebuild the regex objects
+if (settings.twitters) {
+    settings.twitters.map(twitter => {
+        if (twitter.filter) twitter.filter.map(filter => {
+            twitterFilters[filter.name] = new RegExp(filter.pattern, filter.ignoreCase ? "i" : "");
+        });
+    });
+}
+
 // this is just for the main server
 async function crossPostTweets() {
     try {
@@ -378,6 +389,24 @@ async function crossPostTweets() {
                     
                     if (!(await databaseApi.findByTwitterId(tweet.id))) {
                         let text = tweet.text;
+
+                        // check if this tweet has text filters
+                        if (twitter.filter && twitter.filter.length > 0) {
+                            let tweetFilterMatches = false;
+
+                            for (let filter of twitter.filter) {
+                                if (twitterFilters[filter.name]) {
+                                    if (twitterFilters[filter.name].test(text)) {
+                                        tweetFilterMatches = true;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            // the tweet doesn't match our current filter
+                            if (!tweetFilterMatches) continue;
+                        }
+
                         if (text.lastIndexOf("https:") > -1) {
                             text = text.substring(0, text.lastIndexOf("https:"));
                         }
