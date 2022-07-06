@@ -200,7 +200,7 @@ async function postRedditToDiscord(
             // @ts-ignore
             return message.id;
         } catch (err) {
-            console.log("offending link: " + imageUrl);
+            console.log("offending link: " + err.toString());
         }
     } else {
         // this is sending an interaction
