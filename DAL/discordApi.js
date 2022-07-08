@@ -249,6 +249,9 @@ async function postTwitterToDiscord(
 
             contentToSend.embeds[i].image.url = attachments[i].url;
         }
+    } else {
+        // put the link here if we don't have an image
+        contentToSend.embeds[0].url = url;
     }
 
     // respond with a regular message
