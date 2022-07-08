@@ -220,7 +220,8 @@ async function postTwitterToDiscord(
     createdOn = "",
     url = "",
     attachments = [],
-    tweetPingRole = null) {
+    tweetPingRole = null,
+    tweetReactions = null) {
 
     const contentToSend = {
         embeds: [{
@@ -262,6 +263,16 @@ async function postTwitterToDiscord(
                 message.crosspost().catch(e => console.log(e));
         } catch (cross_err) {
             console.log("Unable to crosspost: " + cross_err);
+        }
+
+        try {
+            if (tweetReactions && tweetReactions.length) {
+                for (let tweetReaction of tweetReactions) {
+                    message.react(tweetReaction);
+                }
+            }
+        } catch (react_err) {
+            console.log("Unable to crosspost: " + react_err);
         }
 
         // @ts-ignore
