@@ -9,7 +9,7 @@ const { pickSplatfestTeam, setServerRoles, deleteServerRoles } = require("../../
 async function join(interaction) {
     const team = interaction.options.getString("team");
 
-    if (new Date().valueOf() <= 1657454340) {
+    if (new Date().valueOf() <= 1657454340000) {
         await interaction.reply({ content: `Team voting has not started yet!  Please try July 10 after 8AM ET!` });
         return;
     }
