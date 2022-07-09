@@ -9,6 +9,11 @@ const { pickSplatfestTeam, setServerRoles, deleteServerRoles } = require("../../
 async function join(interaction) {
     const team = interaction.options.getString("team");
 
+    if (new Date().valueOf() <= 1657454340) {
+        await interaction.reply({ content: `Team voting has not started yet!  Please try July 10 after 8AM ET!` });
+        return;
+    }
+
     if (await pickSplatfestTeam(interaction.member.user.id, team)) {
         // TODO: abstract this
         await interaction.reply({ content: `You've joined team ${team === "alpha" ? "Squid Sisters" : "Off The Hook"}!`});
