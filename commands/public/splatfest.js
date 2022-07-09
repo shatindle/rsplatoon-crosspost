@@ -57,8 +57,8 @@ module.exports = {
                     option.setName("team")
                         .setDescription("The team you want to join")
                         .addChoices(
-                            { name: "squidsisters", value: "Squid Sisters" },
-                            { name: "offthehook", value: "Off the Hook" }
+                            { name: "squidsisters", value: "alpha" },
+                            { name: "offthehook", value: "bravo" }
                         )
                         .setRequired(true)))
         .addSubcommand(subcommand => 
