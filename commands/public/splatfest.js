@@ -10,7 +10,8 @@ async function join(interaction) {
     const team = interaction.options.getString("team");
 
     if (await pickSplatfestTeam(interaction.member.user.id, team)) {
-        await interaction.reply({ content: `You've joined team ${team}!`});
+        // TODO: abstract this
+        await interaction.reply({ content: `You've joined team ${team === "alpha" ? "Squid Sisters" : "Off The Hook"}!`});
     } else {
         await interaction.reply({ content: `Something went wrong. Did you already pick a team?`});
     }
