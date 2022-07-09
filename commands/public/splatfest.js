@@ -1,4 +1,49 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
+const { pickSplatfestTeam, setServerRoles, deleteServerRoles } = require("../../DAL/splatfestApi");
+
+/**
+ * 
+ * @param {CommandInteraction} interaction The user interaction
+ */
+async function join(interaction) {
+    const team = interaction.options.getString("team");
+
+    if (await pickSplatfestTeam(interaction.member.user.id, team)) {
+        await interaction.reply({ content: `You've joined team ${team}!`});
+    } else {
+        await interaction.reply({ content: `Something went wrong. Did you already pick a team?`});
+    }
+}
+
+/**
+ * 
+ * @param {CommandInteraction} interaction The user interaction
+ */
+async function enable(interaction) {
+    if (!interaction.member.permissions.has(Permissions.FLAGS.MANAGE_CHANNELS)) {
+        await interaction.reply({ content: "You need the MANAGE_CHANNELS permission to run this command" });
+        return;
+    }
+    const { id:squidsisters } = interaction.options.getRole("squidsisters");
+    const { id:offthehook } = interaction.options.getRole("offthehook");
+
+    if (await setServerRoles(interaction.guild.id, squidsisters, offthehook)) {
+        await interaction.reply(`You're all set!\nSquid Sisters is set to <@&${squidsisters}>.\nOff the Hook is set to <@&${offthehook}>.`);
+    }
+}
+
+/**
+ * 
+ * @param {CommandInteraction} interaction The user interaction
+ */
+async function disable(interaction) {
+    if (!interaction.member.permissions.has(Permissions.FLAGS.MANAGE_CHANNELS)) {
+        await interaction.reply({ content: "You need the MANAGE_CHANNELS permission to run this command" });
+        return;
+    }
+
+    await deleteServerRoles(interaction.guild.id);
+}
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -11,8 +56,8 @@ module.exports = {
                     option.setName("team")
                         .setDescription("The team you want to join")
                         .addChoices(
-                            { name: "squidsisters", value: "alpha" },
-                            { name: "offthehook", value: "bravo" }
+                            { name: "squidsisters", value: "Squid Sisters" },
+                            { name: "offthehook", value: "Off the Hook" }
                         )
                         .setRequired(true)))
         .addSubcommand(subcommand => 
@@ -30,7 +75,21 @@ module.exports = {
             subcommand.setName("disable")
                 .setDescription("Turn off splatfests for this server.")),
 	async execute(interaction) {
-        await interaction.reply({ content: "These commands are still being setup for the Custom Splatfest.  Check back again in a few days for when these commands are enabled!" });
-        return;
+        try {
+            const subcommand = interaction.options.getSubcommand();
+
+            switch (subcommand) {
+                case "join":
+                    return await join(interaction);
+                case "enable":
+                    return await enable(interaction);
+                case "disable":
+                    return await disable(interaction);
+                default: 
+                    return interaction.reply({ content: "Invalid request" });
+            }
+        } catch (err) {
+            console.log(`Error in /splatfest: ${err.toString()}`);
+        }
 	},
 };
