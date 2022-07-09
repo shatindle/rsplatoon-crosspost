@@ -410,6 +410,11 @@ async function crossPostTweets() {
                         if (text.lastIndexOf("https:") > -1) {
                             text = text.substring(0, text.lastIndexOf("https:"));
                         }
+
+                        let tweetReactions = null;
+
+                        if (twitter.reactions && twitter.reactions.length) 
+                            tweetReactions = twitter.reactions;
     
                         // tweet hasn't been cross posted, cross post it
                         const discordId = await discordApi.postTwitterToDiscord(
@@ -423,7 +428,8 @@ async function crossPostTweets() {
                             tweet.created_at,
                             "https://twitter.com/" + user.username + "/status/" + tweet.id,
                             tweet.attachments,
-                            twitter.ping
+                            twitter.ping,
+                            tweetReactions
                         );
             
                         await databaseApi.saveTweet(tweet, discordId);
