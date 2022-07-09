@@ -1,4 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
+const { Permissions } = require("discord.js");
 const { pickSplatfestTeam, setServerRoles, deleteServerRoles } = require("../../DAL/splatfestApi");
 
 /**
