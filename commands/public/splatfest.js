@@ -7,6 +7,9 @@ const { pickSplatfestTeam, setServerRoles, deleteServerRoles } = require("../../
  * @param {CommandInteraction} interaction The user interaction
  */
 async function join(interaction) {
+    await interaction.reply({ content: "The splatfest is over!  Be on the lookout for future events!" });
+    return;
+
     const team = interaction.options.getString("team");
 
     if (new Date().valueOf() <= 1657454340000) {
