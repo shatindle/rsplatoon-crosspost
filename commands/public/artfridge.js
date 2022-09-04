@@ -4,6 +4,9 @@ const { fridges, createFridge, init, removeFridge, addFridgeSource, removeFridge
 
 init();
 
+const emoteRegex = /<:.+:(\d+)>/gm
+const animatedEmoteRegex = /<a:.+:(\d+)>/gm
+
 /**
  * 
  * @param {CommandInteraction} interaction The user interaction
@@ -11,7 +14,21 @@ init();
 async function install(interaction) {
     const { id:fromId } = interaction.options.getChannel("from");
     const { id:toId } = interaction.options.getChannel("to");
-    const upvote = interaction.options.getString("upvote").replace(/\D/g,'');
+
+    let upvote = interaction.options.getString("upvote");
+
+    // look for static then animated emoji
+    const regularEmoji = emoteRegex.exec(upvote);
+    const animatedEmoji = animatedEmoteRegex.exec(upvote);
+
+    if (regularEmoji) {
+        // second param is the ID
+        upvote = regularEmoji[1];
+    } else if (animatedEmoji) {
+        // second param is the ID
+        upvote = animatedEmoji[1];
+    }
+
     let votes = interaction.options.getInteger("votes");
     let color = interaction.options.getString("color");
     const guildId = interaction.guild.id;
