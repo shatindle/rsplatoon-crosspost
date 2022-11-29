@@ -285,6 +285,30 @@ async function postTwitterToDiscord(
     }
 }
 
+async function postPatchNotesToDiscord(channelId = "", content = "", startThread = false, threadName = "") {
+    var channel = await discord.channels.fetch(channelId);
+    var message = await channel.send(content);
+
+    try {
+        if (message.channel.type === "GUILD_NEWS")
+            // do not wait for crosspost to finish
+            message.crosspost().catch(e => console.log(e));
+    } catch (cross_err) {
+        console.log("Unable to crosspost: " + cross_err);
+    }
+
+    if (startThread) {
+        var thread = await message.startThread({
+            name: threadName
+        });
+
+        return thread.id;
+    }
+
+    // @ts-ignore
+    return message.id;
+}
+
 async function postAttachments(channelId = "", attachments = []) {
     // post the content
     try {
@@ -574,5 +598,6 @@ module.exports = {
     removeColorRoles,
     addColorRoles,
     postTwitterToDiscord,
-    client: discord
+    client: discord,
+    postPatchNotesToDiscord
 };

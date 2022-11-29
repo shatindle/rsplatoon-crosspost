@@ -9,6 +9,7 @@ const japaneseToEnglishSplatoonApi = require("./DAL/japaneseToEnglishSplatoonApi
 const { Collection } = require("discord.js");
 const { token } = require("./discord.json");
 const { fridges } = require("./DAL/fridgeApi");
+const { extractPatchNotes } = require("./DAL/patchnotesApi");
 
 const fs = require('fs');
 
@@ -442,7 +443,71 @@ async function crossPostTweets() {
     }
 }
 
+function chunkContent(content = "") {
+    const lines = content.split("\n");
 
+    let chunks = [];
+
+    let currentChunk = "";
+
+    for (let chunk of lines) {
+        if (chunk.length + 1 + currentChunk.length > 2000) {
+            chunks.push(currentChunk);
+            currentChunk = "";
+        }
+
+        currentChunk += chunk + "\n";
+    }
+
+    chunks.push(currentChunk);
+
+    return chunks;
+}
+
+async function patchNotes() {
+    // check if version lookups are intended
+    if (!settings.patchNotes) return;
+
+    for (let language of Object.keys(settings.patchNotes)) {
+        let url = settings.patchNotes[language].url;
+        let channelId = settings.patchNotes[language].channelId;
+
+        try {
+            let versions = await extractPatchNotes(url);
+    
+            for (let data of versions) {
+                // check if we've posted this version
+                let chunks = chunkContent(data.content);
+                let threadVersion = `${language}-${channelId}-${data.version}`;
+                let mainThread = await databaseApi.findByPatchNotes(threadVersion);
+
+                if (!mainThread) {
+                    // create the thread post
+
+                    let threadPost = await discordApi.postPatchNotesToDiscord(channelId, data.name, true, data.name);
+
+                    await databaseApi.savePatchNotes(threadVersion, data.name, threadPost);
+
+                    mainThread = await databaseApi.findByPatchNotes(threadVersion);
+                }
+
+                for (let i = 0; i < chunks.length; i++) {
+                    let version = `${language}-${channelId}-${data.version}-${i}`;
+                    if (!await databaseApi.findByPatchNotes(version)) {
+                        let content = chunks[i];
+    
+                        let id = await discordApi.postPatchNotesToDiscord(mainThread.discordId, content);
+    
+                        await databaseApi.savePatchNotes(version, content, id);
+                    }
+                }
+            }
+        } catch (err) {
+            console.log(`Error getting patch notes for ${language}: ${err.toString()}`);
+        }
+    }
+    
+}
 
 discordApi.client.once("ready", async () => {
     // run on startup, then run once per minute
@@ -460,6 +525,12 @@ discordApi.client.once("ready", async () => {
     // cross post tweets once per minute
     await crossPostTweets();
     setInterval(crossPostTweets, 60000);
+
+    // poll for patches once per hour
+    if (settings.patchNotes) {
+        await patchNotes();
+        setInterval(patchNotes, 1000 * 60 * 60);
+    }
 });
 
 discordApi.client.login(token);

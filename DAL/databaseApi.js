@@ -8,6 +8,7 @@ const db = new Firestore({
 
 const postCache = [];
 const tweetCache = [];
+const patchNotesCache = [];
 
 function addToCache(item, cache) {
     cache.unshift(item);
@@ -68,6 +69,49 @@ async function saveTweet(tweet, discordId) {
     await db.collection("tweets").doc(tweet.id).set(record);
 
     addToCache(record, tweetCache);
+}
+
+function checkPatchNotesCache(item) {
+    for (var i = 0; i < patchNotesCache.length; i++) {
+        if (patchNotesCache[i].id == item.id) {
+            var first = patchNotesCache[i];
+
+            patchNotesCache.sort(function(x,y){ return x == first ? -1 : y == first ? 1 : 0; });
+            
+            return first;
+        }
+    }
+}
+
+async function findByPatchNotes(id) {
+    const inCacheValue = checkPatchNotesCache({ id });
+
+    if (inCacheValue)
+        return inCacheValue;
+
+    const response = await db.collection("patchnotes").doc(id).get();
+
+    if (!response.exists)
+        return null;
+
+    let result = response.data();
+
+    addToCache(result, patchNotesCache);
+
+    return result;
+}
+
+async function savePatchNotes(version, content, discordId) {
+    var record = {
+        id: version,
+        content,
+        discordId,
+        createdOn: Firestore.Timestamp.now()
+    };
+    
+    await db.collection("patchnotes").doc(version).set(record);
+
+    addToCache(record, patchNotesCache);
 }
 
 async function findByRedditId(id) {
@@ -302,5 +346,8 @@ module.exports = {
     createFridge,
     removeFridge,
     addFridgeSource,
-    removeFridgeSource
+    removeFridgeSource,
+
+    findByPatchNotes,
+    savePatchNotes
 };
