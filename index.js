@@ -383,7 +383,7 @@ async function crossPostTweets() {
 
         for (let twitter of settings.twitters) {
             for (let userId of twitter.accounts) {
-                let { tweets, user } = await twitterApi.getRecentTweets(userId, twitter.ignore_replies);
+                let { tweets, user } = await twitterApi.getRecentTweets(userId, null, twitter.ignore_replies);
 
                 for (let i = 0; i < tweets.length; i++) {
                     let tweet = tweets[i];
