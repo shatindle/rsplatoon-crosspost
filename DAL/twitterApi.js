@@ -10,7 +10,10 @@ const roClient = twitterClient.readOnly;
 async function getRecentTweets(userId, start_date = null, ignore_replies = false) {
     const userDetails = await roClient.v2.user(userId);
 
-    let date = start_date ?? new Date();
+    let date;
+
+    if (start_date) date = start_date;
+    else date = new Date();
 
     if (!start_date) {
         date.setMinutes(date.getMinutes() - 60);
