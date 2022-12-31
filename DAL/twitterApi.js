@@ -7,7 +7,7 @@ const twitterClient = new TwitterApi(token);
 // Tell typescript it's a readonly app
 const roClient = twitterClient.readOnly;
 
-async function getRecentTweets(userId, start_date = null) {
+async function getRecentTweets(userId, start_date = null, ignore_replies = false) {
     const userDetails = await roClient.v2.user(userId);
 
     let date = start_date ?? new Date();
@@ -18,7 +18,7 @@ async function getRecentTweets(userId, start_date = null) {
     }
 
     // const searchResults = await roClient.search("from:2888006497", { 
-    const { tweets, includes } = await roClient.search(`from:${userId} -is:retweet`, { 
+    const { tweets, includes } = await roClient.search(`from:${userId} -is:retweet${ignore_replies ? " -is:reply" : ""}`, { 
         "tweet.fields": [
             "id",
             "text",
