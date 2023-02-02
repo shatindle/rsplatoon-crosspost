@@ -376,14 +376,28 @@ if (settings.twitters) {
     });
 }
 
+let dates = {
+    now: null,
+    next: null
+};
+
 // this is just for the main server
 async function crossPostTweets() {
     try {
         if (!settings.twitters) return;
 
+        if (!dates.now) {
+            dates.now = new Date();
+            dates.now.setMinutes(dates.now.getMinutes() - 60);
+            dates.now.setHours(0, 0, 0, 0);
+        }
+
+        // lower the scope of tweet queries since we don't need *that* much
+        dates.next = new Date();
+
         for (let twitter of settings.twitters) {
             for (let userId of twitter.accounts) {
-                let { tweets, user } = await twitterApi.getRecentTweets(userId, null, twitter.ignore_replies);
+                let { tweets, user } = await twitterApi.getRecentTweets(userId, dates.now, twitter.ignore_replies);
 
                 for (let i = 0; i < tweets.length; i++) {
                     let tweet = tweets[i];
@@ -441,6 +455,8 @@ async function crossPostTweets() {
     } catch (err) {
         console.log("Error getting tweets: " + err);
     }
+
+    dates.now = dates.next;
 }
 
 function chunkContent(content = "") {
