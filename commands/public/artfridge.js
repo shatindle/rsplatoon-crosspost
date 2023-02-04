@@ -14,7 +14,7 @@ async function install(interaction) {
     const { id:fromId } = interaction.options.getChannel("from");
     const { id:toId } = interaction.options.getChannel("to");
 
-    let upvote = interaction.options.getString("upvote");
+    let upvote = interaction.options.getString("upvote").trim();
 
     // look for static then animated emoji
     const regularEmoji = emoteRegex.exec(upvote);
