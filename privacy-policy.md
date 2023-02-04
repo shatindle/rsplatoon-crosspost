@@ -22,6 +22,7 @@ Access to Data is only permitted to the Application's developers, and only in th
 Configuration and suspected malicious message data is stored in Google Cloud Firestore.  Google Cloud Firestore is [encrypted at rest](https://cloud.google.com/firestore/docs/server-side-encryption). The database is secured to prevent external access, however no guarantee is provided and the Application owners assume no liability for the unintentional or malicious breach of Data. In the event of an unauthorised Data access, users will be notified through the Discord client application.
 
 The data recorded in Firestore includes:
+- User IDs
 - Guild IDs
 - Reddit post IDs and the associated Message ID crosspost
 - Configuration Creation datetime stamps
