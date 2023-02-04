@@ -27,7 +27,19 @@ async function install(interaction) {
     let votes = interaction.options.getInteger("votes");
     let color = interaction.options.getString("color");
     const guildId = interaction.guild.id;
-    const emojis = interaction.guild.emojis.cache.map((e) => e.id);
+
+    try {
+        // verify the upvote is just an emoji (either default or literal emoji)
+        const serverEmoji = await interaction.guild.emojis.fetch(upvote);
+
+        if (serverEmoji === null || serverEmoji.id !== upvote) {
+            await interaction.reply({ content: "Error: The upvote emoji must be a custom emoji in this server." });
+            return;
+        }
+    } catch {
+        await interaction.reply({ content: "Error: The upvote emoji must be a custom emoji in this server." });
+        return;
+    }
 
     if (!votes || votes < 2) votes = 5;
 
@@ -35,12 +47,6 @@ async function install(interaction) {
 
     if (!color || !/^[0-9a-f]{6}$/i.test(formattedColor)) color = "ffd635";
     else color = formattedColor;
-
-    // verify the upvote is just an emoji (either default or literal emoji)
-    if (emojis.filter(t => t === upvote).length !== 1) {
-        await interaction.reply({ content: "Error: The upvote emoji must be a custom emoji in this server." });
-        return;
-    }
 
     // verify the to and from channels are not the same
     if (fromId === toId) {
