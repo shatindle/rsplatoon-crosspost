@@ -180,11 +180,17 @@ async function ProcessPosts(newPosts) {
 /** @description Gets new posts from the r/Splatoon subreddit
  * 
  * @param {string} sub The subreddit to get new posts from
+ * @param {number} limit The max number of items to return
+ * @param {string} after The string ID of the last item to return
  * @returns {Promise<Array<RedditPost>>} A list of new Reddit posts
  */
-async function getNewPosts(sub = "r/Splatoon") {
+async function getNewPosts(sub = "r/Splatoon", limit = 10, after) {
+    let options = { limit };
+
+    if (after) options.after = after;
+
     var newPosts = await reddit.getSubreddit(sub)
-        .getNew({ limit: 10 });
+        .getNew(options);
 
     return ProcessPosts(newPosts);
 }
