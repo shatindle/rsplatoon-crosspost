@@ -65,7 +65,7 @@ async function getRecentTweets(userId, start_date = null, ignore_replies = false
         return data;
     });
 
-    result.reverse();
+    result.sort((a, b) => a.id > b.id ? 1 : -1);
 
     return {
         user: userDetails.data,
