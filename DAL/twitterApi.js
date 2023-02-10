@@ -65,6 +65,8 @@ async function getRecentTweets(userId, start_date = null, ignore_replies = false
         return data;
     });
 
+    result.reverse();
+
     return {
         user: userDetails.data,
         tweets: result

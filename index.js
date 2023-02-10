@@ -388,7 +388,8 @@ async function crossPostTweets() {
 
         if (!dates.now) {
             dates.now = new Date();
-            dates.now.setMinutes(dates.now.getMinutes() - 60);
+            dates.now.setDate(dates.now.getDate() - 1);
+            //dates.now.setMinutes(dates.now.getMinutes() - 60);
             dates.now.setHours(0, 0, 0, 0);
         }
 
