@@ -3,7 +3,7 @@ const redditApi = require("./DAL/redditApi");
 const database = require("./DAL/databaseApi");
 const databaseApi = require("./DAL/databaseApi");
 const settings = require("./settings.json");
-const twitterApi = require("./DAL/twitterApi");
+const twitterApi = settings.nitter.use ? require("./DAL/nitterApi") : require("./DAL/twitterApi");
 const languageApi = require("./DAL/languageApi");
 const japaneseToEnglishSplatoonApi = require("./DAL/japaneseToEnglishSplatoonApi");
 const { Collection } = require("discord.js");
@@ -397,7 +397,7 @@ async function crossPostTweets() {
         dates.next = new Date();
 
         for (let twitter of settings.twitters) {
-            for (let userId of twitter.accounts) {
+            for (let userId of settings.nitter.use ? twitter.users : twitter.accounts) {
                 let { tweets, user } = await twitterApi.getRecentTweets(userId, dates.now, twitter.ignore_replies);
 
                 for (let i = 0; i < tweets.length; i++) {
