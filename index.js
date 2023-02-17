@@ -380,6 +380,7 @@ if (settings.twitters) {
 
 let dates = {
     now: null,
+    nitter: null,
     next: null,
     running: false
 };
@@ -400,13 +401,18 @@ async function crossPostTweets() {
             dates.now.setHours(0, 0, 0, 0);
         }
 
+        // nitter can pull last 24 hours always since we're not subject to rate limits
+        dates.nitter = new Date();
+        dates.nitter.setDate(dates.nitter.getDate() - 1);
+        dates.nitter.setHours(0, 0, 0, 0);
+
         // lower the scope of tweet queries since we don't need *that* much
         dates.next = new Date();
 
         for (let twitter of settings.twitters) {
             for (let userId of twitter.useNitter ? twitter.users : twitter.accounts) {
                 let { tweets, user } = twitter.useNitter ? 
-                    await nitterApi.getRecentTweets(userId, dates.now, twitter.ignore_replies) : 
+                    await nitterApi.getRecentTweets(userId, dates.nitter, twitter.ignore_replies) : 
                     await twitterApi.getRecentTweets(userId, dates.now, twitter.ignore_replies);
 
                 for (let i = 0; i < tweets.length; i++) {
