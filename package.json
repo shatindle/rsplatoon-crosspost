@@ -45,6 +45,7 @@
     "snoowrap": "^1.23.0",
     "turndown": "^7.1.1",
     "turndown-plugin-gfm": "^1.0.2",
-    "twitter-api-v2": "^1.12.2"
+    "twitter-api-v2": "^1.12.2",
+    "uuid": "^9.0.0"
   }
 }

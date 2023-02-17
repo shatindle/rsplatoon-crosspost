@@ -3,13 +3,15 @@ const redditApi = require("./DAL/redditApi");
 const database = require("./DAL/databaseApi");
 const databaseApi = require("./DAL/databaseApi");
 const settings = require("./settings.json");
-const twitterApi = settings.nitter.use ? require("./DAL/nitterApi") : require("./DAL/twitterApi");
+const twitterApi = require("./DAL/twitterApi");
+const nitterApi = require("./DAL/nitterApi");
 const languageApi = require("./DAL/languageApi");
 const japaneseToEnglishSplatoonApi = require("./DAL/japaneseToEnglishSplatoonApi");
 const { Collection } = require("discord.js");
 const { token } = require("./discord.json");
 const { fridges } = require("./DAL/fridgeApi");
 const { extractPatchNotes } = require("./DAL/patchnotesApi");
+const uuid = require('uuid');
 
 const fs = require('fs');
 
@@ -397,8 +399,10 @@ async function crossPostTweets() {
         dates.next = new Date();
 
         for (let twitter of settings.twitters) {
-            for (let userId of settings.nitter.use ? twitter.users : twitter.accounts) {
-                let { tweets, user } = await twitterApi.getRecentTweets(userId, dates.now, twitter.ignore_replies);
+            for (let userId of twitter.useNitter ? twitter.users : twitter.accounts) {
+                let { tweets, user } = twitter.useNitter ? 
+                    await nitterApi.getRecentTweets(userId, dates.now, twitter.ignore_replies) : 
+                    await twitterApi.getRecentTweets(userId, dates.now, twitter.ignore_replies);
 
                 for (let i = 0; i < tweets.length; i++) {
                     let tweet = tweets[i];
@@ -431,6 +435,19 @@ async function crossPostTweets() {
 
                         if (twitter.reactions && twitter.reactions.length) 
                             tweetReactions = twitter.reactions;
+
+                        let videoData = null;
+
+                        if (tweet.hasVideo && twitter.useNitter) {
+                            try {
+                                let videoResponse = await nitterApi.getVideo(userId, tweet.id, 1);
+
+                                videoData = {
+                                    buffer: videoResponse,
+                                    name: `${uuid.v4()}.mp4`
+                                }
+                            } catch {}
+                        }
     
                         // tweet hasn't been cross posted, cross post it
                         const discordId = await discordApi.postTwitterToDiscord(
@@ -445,7 +462,8 @@ async function crossPostTweets() {
                             "https://twitter.com/" + user.username + "/status/" + tweet.id,
                             tweet.attachments,
                             twitter.ping,
-                            tweetReactions
+                            tweetReactions,
+                            videoData
                         );
             
                         await databaseApi.saveTweet(tweet, discordId);

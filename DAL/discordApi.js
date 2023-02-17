@@ -1,4 +1,4 @@
-const { Client, Intents, Message, MessageReaction, User} = require('discord.js');
+const { Client, Intents, Message, MessageReaction, User, MessageAttachment} = require('discord.js');
 const fetchWithTimeout = require("./fetchWithTimeout");
 
 const discord = new Client({ 
@@ -220,7 +220,8 @@ async function postTwitterToDiscord(
     url = "",
     attachments = [],
     tweetPingRole = null,
-    tweetReactions = null) {
+    tweetReactions = null,
+    videoStream = null) {
 
     const contentToSend = {
         embeds: [{
@@ -234,8 +235,10 @@ async function postTwitterToDiscord(
     if (tweetPingRole)
         contentToSend.content = `<@&${tweetPingRole}>`;
 
-    if (attachments && attachments.length > 0) {
-        for (let i = 0; i < attachments.length; i++) {
+    if (attachments && attachments.filter(t => t.type !== "video").length > 0) {
+        let notVideos = attachments.filter(t => t.type !== "video");
+
+        for (let i = 0; i < notVideos.length; i++) {
             if (i !== 0) {
                 contentToSend.embeds.push({
                     url,
@@ -246,7 +249,7 @@ async function postTwitterToDiscord(
                 contentToSend.embeds[0].image = {};
             }
 
-            contentToSend.embeds[i].image.url = attachments[i].url;
+            contentToSend.embeds[i].image.url = notVideos[i].url;
         }
     } else {
         // put the link here if we don't have an image
@@ -275,6 +278,17 @@ async function postTwitterToDiscord(
             }
         } catch (react_err) {
             console.log("Unable to crosspost: " + react_err);
+        }
+
+        if (videoStream) {
+            let videoMessage = await channel.send({files: [new MessageAttachment(videoStream.buffer, videoStream.name)]});
+            try {
+                if (videoMessage.channel.type === "GUILD_NEWS")
+                    // do not wait for crosspost to finish
+                    videoMessage.crosspost().catch(e => console.log(e));
+            } catch (cross_err) {
+                console.log("Unable to crosspost: " + cross_err);
+            }
         }
 
         // @ts-ignore

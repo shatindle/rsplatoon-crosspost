@@ -39,6 +39,8 @@ async function getRecentTweets(username, start_date = null, ignore_replies = fal
                 url: video,
                 type: "video"
             });
+
+            tweet.hasVideo = true;
         }
 
         tweet.created_at = new Date(tweet.created_at);
@@ -60,6 +62,22 @@ async function getRecentTweets(username, start_date = null, ignore_replies = fal
     }
 }
 
+async function getVideo(username, id, number) {
+    const video = await fetch(`${nitter.url}/user/${username}/${id}/video/${number}`, { 
+        method: "POST",
+        headers: {
+            [nitter.apiKey]: nitter.apiValue
+        }
+    });
+
+    if (!video.ok) return;
+
+    const content = await video.buffer();
+
+    return content;
+}
+
 module.exports = {
-    getRecentTweets
+    getRecentTweets,
+    getVideo
 };
