@@ -380,13 +380,18 @@ if (settings.twitters) {
 
 let dates = {
     now: null,
-    next: null
+    next: null,
+    running: false
 };
 
 // this is just for the main server
 async function crossPostTweets() {
     try {
         if (!settings.twitters) return;
+
+        if (dates.running) return;
+
+        dates.running = true;
 
         if (!dates.now) {
             dates.now = new Date();
@@ -476,6 +481,7 @@ async function crossPostTweets() {
     }
 
     dates.now = dates.next;
+    dates.running = false;
 }
 
 function chunkContent(content = "") {
