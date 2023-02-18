@@ -256,6 +256,14 @@ async function postTwitterToDiscord(
         contentToSend.embeds[0].url = url;
     }
 
+    if (videoStream && videoStream.type === "gif" && videoStream.buffer.length < 7900000) {
+        contentToSend.embeds[0].image ={
+            url: `attachment://${videoStream.name}`
+        };
+
+        contentToSend.files = [new MessageAttachment(videoStream.buffer, videoStream.name)];
+    }
+
     // respond with a regular message
     try {
         var channel = await discord.channels.fetch(channelId);
@@ -280,7 +288,7 @@ async function postTwitterToDiscord(
             console.log("Unable to crosspost: " + react_err);
         }
 
-        if (videoStream) {
+        if (videoStream && videoStream.type === "video" && videoStream.buffer.length < 7900000) {
             let videoMessage = await channel.send({files: [new MessageAttachment(videoStream.buffer, videoStream.name)]});
             try {
                 if (videoMessage.channel.type === "GUILD_NEWS")

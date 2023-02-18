@@ -451,11 +451,24 @@ async function crossPostTweets() {
 
                         if (tweet.hasVideo && twitter.useNitter) {
                             try {
-                                let videoResponse = await nitterApi.getVideo(userId, tweet.id, 1);
+                                let mediaType = await nitterApi.getMediaType(userId, tweet.id, 1);
 
-                                videoData = {
-                                    buffer: videoResponse,
-                                    name: `${uuid.v4()}.mp4`
+                                if (mediaType === "gif") {
+                                    let gifResponse = await nitterApi.getGif(userId, tweet.id, 1, 30, 300);
+
+                                    videoData = {
+                                        buffer: gifResponse,
+                                        name: `${uuid.v4()}.gif`,
+                                        type: "gif"
+                                    }
+                                } else {
+                                    let videoResponse = await nitterApi.getVideo(userId, tweet.id, 1, true);
+    
+                                    videoData = {
+                                        buffer: videoResponse,
+                                        name: `${uuid.v4()}.mp4`,
+                                        type: "video"
+                                    }
                                 }
                             } catch {}
                         }
