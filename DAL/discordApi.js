@@ -288,7 +288,7 @@ async function postTwitterToDiscord(
             console.log("Unable to crosspost: " + react_err);
         }
 
-        if (videoStream && videoStream.type === "video" && videoStream.buffer.length < 7900000) {
+        if (videoStream && videoStream.type === "video" && videoStream.buffer && videoStream.buffer.length < 7900000) {
             let videoMessage = await channel.send({files: [new MessageAttachment(videoStream.buffer, videoStream.name)]});
             try {
                 if (videoMessage.channel.type === "GUILD_NEWS")
