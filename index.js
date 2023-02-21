@@ -454,7 +454,7 @@ async function crossPostTweets() {
                                 let mediaType = await nitterApi.getMediaType(userId, tweet.id, 1);
 
                                 if (mediaType === "gif") {
-                                    let gifResponse = await nitterApi.getGif(userId, tweet.id, 1, 30, 300);
+                                    let gifResponse = await nitterApi.getGif(userId, tweet.id, 1, 18, 300);
 
                                     videoData = {
                                         buffer: gifResponse,

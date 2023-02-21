@@ -104,10 +104,10 @@ async function getGif(username, id, number, fps = 10, scale = 300) {
 
     let content = await video.buffer();
 
-    if (!content || content.length > 7500000 || content.length === 0) {
+    if (!content || content.length > 7900000 || content.length === 0) {
         delete content;
         // too big...
-        if (fps > 10 && scale > 300) {
+        if (fps > 10 || scale > 300) {
             // try scaling down to defaults
             return await getGif(username, id, number);
         }
