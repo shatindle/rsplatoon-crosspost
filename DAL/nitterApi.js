@@ -93,7 +93,7 @@ async function getVideo(username, id, number, smallest) {
 }
 
 async function getGif(username, id, number, fps = 10, scale = 300) {
-    const video = await fetch(`${nitter.url}/user/${username}/${id}/video/${number}?type=gif&fps=15&scale=300`, { 
+    const video = await fetch(`${nitter.url}/user/${username}/${id}/video/${number}?type=gif&fps=${fps}&scale=${scale}`, { 
         method: "POST",
         headers: {
             [nitter.apiKey]: nitter.apiValue
@@ -104,7 +104,7 @@ async function getGif(username, id, number, fps = 10, scale = 300) {
 
     let content = await video.buffer();
 
-    if (content.length > 7500000) {
+    if (!content || content.length > 7500000 || content.length === 0) {
         delete content;
         // too big...
         if (fps > 10 && scale > 300) {

@@ -256,7 +256,7 @@ async function postTwitterToDiscord(
         contentToSend.embeds[0].url = url;
     }
 
-    if (videoStream && videoStream.type === "gif" && videoStream.buffer.length < 7900000) {
+    if (videoStream && videoStream.type === "gif" && videoStream.buffer && videoStream.buffer.length < 7900000) {
         contentToSend.embeds[0].image ={
             url: `attachment://${videoStream.name}`
         };
