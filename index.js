@@ -451,23 +451,37 @@ async function crossPostTweets() {
 
                         if (tweet.hasVideo && twitter.useNitter) {
                             try {
-                                let mediaType = await nitterApi.getMediaType(userId, tweet.id, 1);
+                                let mediaDetails = await nitterApi.getMediaDetails(userId, tweet.id, 1);
 
-                                if (mediaType === "gif") {
+                                // get boost count to determine max size we can send
+                                // 8MB for level 1 or 0, 50MB for level 2+
+                                let boostCount = await discordApi.getBoostCount(twitter.target);
+
+                                if (mediaDetails.mediaType === "gif") {
                                     let gifResponse = await nitterApi.getGif(userId, tweet.id, 1, 18, 300);
 
-                                    videoData = {
-                                        buffer: gifResponse,
-                                        name: `${uuid.v4()}.gif`,
-                                        type: "gif"
+                                    if (
+                                        (boostCount < 7 && gifResponse.length < 7900000) ||
+                                        (boostCount >= 7 && gifResponse.length < 49000000)
+                                    ) {
+                                        videoData = {
+                                            buffer: gifResponse,
+                                            name: `${uuid.v4()}.gif`,
+                                            type: "gif"
+                                        }
                                     }
                                 } else {
                                     let videoResponse = await nitterApi.getVideo(userId, tweet.id, 1, true);
-    
-                                    videoData = {
-                                        buffer: videoResponse,
-                                        name: `${uuid.v4()}.mp4`,
-                                        type: "video"
+
+                                    if (
+                                        (boostCount < 7 && videoResponse.length < 7900000) ||
+                                        (boostCount >= 7 && videoResponse.length < 49000000)
+                                    ) {
+                                        videoData = {
+                                            buffer: videoResponse,
+                                            name: `${uuid.v4()}.mp4`,
+                                            type: "video"
+                                        }
                                     }
                                 }
                             } catch {}

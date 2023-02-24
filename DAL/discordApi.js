@@ -210,6 +210,15 @@ async function postRedditToDiscord(
     }
 }
 
+async function getBoostCount(channelId) {
+    try {
+        const channel = await discord.channels.fetch(channelId);
+        return channel.guild.premiumSubscriptionCount;
+    } catch {
+        return 0;
+    }
+}
+
 async function postTwitterToDiscord(
     channelId = "",
     color = 0,
@@ -256,7 +265,7 @@ async function postTwitterToDiscord(
         contentToSend.embeds[0].url = url;
     }
 
-    if (videoStream && videoStream.type === "gif" && videoStream.buffer && videoStream.buffer.length < 7900000) {
+    if (videoStream && videoStream.type === "gif" && videoStream.buffer && videoStream.buffer.length > 0) {
         contentToSend.embeds[0].image ={
             url: `attachment://${videoStream.name}`
         };
@@ -288,7 +297,7 @@ async function postTwitterToDiscord(
             console.log("Unable to crosspost: " + react_err);
         }
 
-        if (videoStream && videoStream.type === "video" && videoStream.buffer && videoStream.buffer.length < 7900000) {
+        if (videoStream && videoStream.type === "video" && videoStream.buffer && videoStream.buffer.length > 0) {
             let videoMessage = await channel.send({files: [new MessageAttachment(videoStream.buffer, videoStream.name)]});
             try {
                 if (videoMessage.channel.type === "GUILD_NEWS")
@@ -620,5 +629,6 @@ module.exports = {
     addColorRoles,
     postTwitterToDiscord,
     client: discord,
-    postPatchNotesToDiscord
+    postPatchNotesToDiscord,
+    getBoostCount
 };

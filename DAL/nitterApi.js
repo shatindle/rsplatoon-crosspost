@@ -62,7 +62,7 @@ async function getRecentTweets(username, start_date = null, ignore_replies = fal
     }
 }
 
-async function getMediaType(username, id, number) {
+async function getMediaDetails(username, id, number) {
     const media = await fetch(`${nitter.url}/user/${username}/${id}/video/${number}`, { 
         method: "OPTIONS",
         headers: {
@@ -74,7 +74,10 @@ async function getMediaType(username, id, number) {
 
     const content = await media.json();
 
-    return content.hasAudio ? "video" : "gif";
+    return {
+        mediaType: content.hasAudio ? "video" : "gif",
+        seconds: content.seconds
+    };
 }
 
 async function getVideo(username, id, number, smallest) {
@@ -123,5 +126,5 @@ module.exports = {
     getRecentTweets,
     getVideo,
     getGif,
-    getMediaType
+    getMediaDetails
 };
