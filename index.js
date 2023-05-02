@@ -5,6 +5,7 @@ const databaseApi = require("./DAL/databaseApi");
 const settings = require("./settings.json");
 const twitterApi = require("./DAL/twitterApi");
 const nitterApi = require("./DAL/nitterApi");
+const mastodonApi = require("./DAL/mastodonApi");
 const languageApi = require("./DAL/languageApi");
 const japaneseToEnglishSplatoonApi = require("./DAL/japaneseToEnglishSplatoonApi");
 const { Collection } = require("discord.js");
@@ -368,12 +369,21 @@ const splatoon3Colors = [
 ];
 
 const twitterFilters = {};
+const mastodonFilters = {};
 
 // get the twitter filters into memory so we don't need to rebuild the regex objects
 if (settings.twitters) {
     settings.twitters.map(twitter => {
         if (twitter.filter) twitter.filter.map(filter => {
             twitterFilters[filter.name] = new RegExp(filter.pattern, filter.ignoreCase ? "i" : "");
+        });
+    });
+}
+
+if (settings.mastodons && settings.mastodons.feeds) {
+    settings.mastodons.feeds.map(t => {
+        if (t.filter) t.filter.map(filter => {
+            mastodonFilters[filter.name] = new RegExp(filter.pattern, filter.ignoreCase ? "i" : "");
         });
     });
 }
@@ -517,6 +527,80 @@ async function crossPostTweets() {
     dates.running = false;
 }
 
+async function crossPostMastodon() {
+    try {
+        if (!settings.mastodons) return;
+
+        for (let connection of settings.mastodons.connections) {
+            let feeds = settings.mastodons.feeds.filter(t => t.name === connection.name);
+
+            // if no one uses this, keep going
+            if (feeds.length === 0) continue;
+
+            let tweets = await mastodonApi.getPostsFromMastodon(connection.url, connection.name, connection.details);
+
+            for (let i = 0; i < tweets.length; i++) {
+                let tweet = tweets[i];
+
+                for (let feed of feeds) {
+                    let text = tweet.text;
+
+                    // check if this tweet has text filters
+                    if (feed.filter && feed.filter.length > 0) {
+                        let matchesFilter = false;
+
+                        for (let filter of feed.filter) {
+                            if (mastodonFilters[filter.name]) {
+                                if (mastodonFilters[filter.name].test(text)) {
+                                    matchesFilter = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        // the tweet doesn't match our current filter
+                        if (!matchesFilter) continue;
+                    }
+
+                    for (let target of feed.targets) {
+                        let id = `${tweet.id}:${target.id}`;
+                        let reactions = null;
+
+                        if (target.reactions && target.reactions.length) reactions = target.reactions;
+
+                        if (!(await databaseApi.findByTwitterId(id))) {
+                            // we have not posted to this feed yet, post it now
+                            // tweet hasn't been cross posted, cross post it
+                            let discordId = await discordApi.postTwitterToDiscord(
+                                target.id,
+                                splatoon3Colors[Math.floor(Math.random()*splatoon3Colors.length)],
+                                tweet.username,
+                                text,
+                                feed.translate ? 
+                                    await languageApi.translateText(japaneseToEnglishSplatoonApi.swapAll(text)) :
+                                    text,
+                                tweet.created_at,
+                                tweet.tweet_url,
+                                tweet.attachments,
+                                target.ping,
+                                reactions,
+                                null // TODO: support videos
+                            );
+                
+                            await databaseApi.saveTweet({
+                                ...tweet,
+                                id
+                            }, discordId);
+                        }
+                    }
+                }
+            }
+        }
+    } catch (err) {
+        console.log("Error getting mastodon posts: " + err);
+    }
+}
+
 function chunkContent(content = "") {
     const lines = content.split("\n");
 
@@ -599,6 +683,10 @@ discordApi.client.once("ready", async () => {
     // cross post tweets once per minute
     await crossPostTweets();
     setInterval(crossPostTweets, 60000);
+
+    // because check once per minute
+    await crossPostMastodon();
+    setInterval(crossPostMastodon, 60000);
 
     // poll for patches once per hour
     if (settings.patchNotes) {
