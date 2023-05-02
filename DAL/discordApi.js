@@ -347,7 +347,8 @@ async function postMastodonToDiscord(
             contentToSend.files = [];
 
             for (let i = 0; i < notVideos.length; i++) {
-                let pictureResponse = await fetch(url);
+                console.log(notVideos[i].url);
+                let pictureResponse = await fetch(notVideos[i].url);
 
                 contentToSend.files.push(new MessageAttachment(await pictureResponse.buffer(), `${i}.png`));
 
@@ -358,8 +359,9 @@ async function postMastodonToDiscord(
                         }
                     });
                 } else {
-                    contentToSend.embeds[0].url = `attachment://${i}.png`;
-                    contentToSend.embeds[0].image = {};
+                    contentToSend.embeds[0].image = {
+                        url: `attachment://${i}.png`
+                    };
                 }
             }
         }
