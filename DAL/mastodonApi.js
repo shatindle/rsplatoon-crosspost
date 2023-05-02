@@ -9,7 +9,7 @@ async function getPostsFromMastodon(url, name, details) {
         }
     });
 
-    if (!userResponse.ok) throw "Unable to get mastodon data";
+    if (!response.ok) throw "Unable to get mastodon data";
 
     let data = await response.json();
 
