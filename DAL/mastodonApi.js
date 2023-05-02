@@ -5,7 +5,7 @@ async function getPostsFromMastodon(url, name, details) {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
-            "User-Agent": "discord.gg/rsplatoon and discord.gg/salmonrun contact shane#1353 for issues, migrated from Twitter"
+            "User-Agent": details
         }
     });
 

@@ -570,7 +570,7 @@ async function crossPostMastodon() {
 
                         if (!(await databaseApi.findByTwitterId(id))) {
                             // we have not posted to this feed yet, post it now
-                            let discordId = await discordApi.postTwitterToDiscord(
+                            let discordId = await discordApi.postMastodonToDiscord(
                                 target.id,
                                 splatoon3Colors[Math.floor(Math.random()*splatoon3Colors.length)],
                                 tweet.username,

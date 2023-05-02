@@ -1,5 +1,6 @@
 const { Client, Intents, Message, MessageReaction, User, MessageAttachment} = require('discord.js');
 const fetchWithTimeout = require("./fetchWithTimeout");
+const fetch = require("node-fetch");
 
 const discord = new Client({ 
     intents: [
@@ -365,10 +366,10 @@ async function postMastodonToDiscord(
                 }
             }
         }
-    } else {
-        // put the link here if we don't have an image
-        contentToSend.embeds[0].url = url;
     }
+    
+    // put the link here even if we have an image
+    contentToSend.embeds[0].url = url;
 
     // TODO: add support for videos (this is more complicated since images must be downloaded)
     // if (videoStream && videoStream.type === "gif" && videoStream.buffer && videoStream.buffer.length > 0) {
