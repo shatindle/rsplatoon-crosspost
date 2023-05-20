@@ -57,9 +57,9 @@ const allRoles = roles.concat(inkRoles);
 const subReddit = settings.subReddit;
 
 // #reddit-posts in Gardevoir's Mansion
-const artChannel = settings.discord.art;
-const generalChannel = settings.discord.general;
-const artContestChannel = settings.discord.artcontest;
+const artChannel = settings.discord?.art;
+const generalChannel = settings.discord?.general;
+const artContestChannel = settings.discord?.artcontest;
 
 const urlRegex = /(https?:\/\/[^ ]*)/g;
 
@@ -182,8 +182,8 @@ discordApi.onReaction(async function(reaction, user) {
     }
 });
 
-const artFlair = settings.specialFlairs.art;
-const artContestFlair = settings.specialFlairs.contest;
+const artFlair = settings.specialFlairs?.art;
+const artContestFlair = settings.specialFlairs?.contest;
 
 /** @description Gets the correct channel this post should go in
  * 
