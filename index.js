@@ -667,9 +667,11 @@ async function patchNotes() {
 }
 
 discordApi.client.once("ready", async () => {
-    // run on startup, then run once per minute
-    await getNewPosts();
-    setInterval(getNewPosts, 60000);
+    if (subReddit) {
+        // run on startup, then run once per minute
+        await getNewPosts();
+        setInterval(getNewPosts, 60000);
+    }
 
     // changeRoleColors();
     await changeRoleColors();
