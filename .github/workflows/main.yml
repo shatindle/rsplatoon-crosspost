@@ -34,7 +34,10 @@ jobs:
           npm audit fix || true
           pm2 stop rsplatoon-bot
           pm2 stop rpokemonunite-bot
+          pm2 stop trendless-splatoon-bot
           cp -r $GITHUB_WORKSPACE/* /home/sha_tindle/repos/rsplatoon-crosspost
           cp -r $GITHUB_WORKSPACE/* /home/sha_tindle/repos/rpokemonunite-crosspost
+          cp -r $GITHUB_WORKSPACE/* /home/sha_tindle/repos/trendless-splatoon-bot
           pm2 start rsplatoon-bot
           pm2 start rpokemonunite-bot
+          pm2 start trendless-splatoon-bot

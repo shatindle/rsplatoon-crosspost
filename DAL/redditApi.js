@@ -2,7 +2,7 @@ const RedditApi = require("snoowrap");
 const oauth_info = require("../oauth_info.json");
 const { redditColors } = require("../settings.json");
 
-const reddit = oauth_info ? new RedditApi(oauth_info) : null;
+const reddit = oauth_info.clientId ? new RedditApi(oauth_info) : null;
 
 /** @description Details about an individual Reddit post */
 class RedditPost {
