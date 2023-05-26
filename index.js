@@ -498,7 +498,7 @@ async function crossPostTweets() {
                         }
     
                         // tweet hasn't been cross posted, cross post it
-                        const discordId = await discordApi.postMastodonToDiscord(
+                        const discordId = await discordApi.postTwitterToDiscord(
                             twitter.target,
                             splatoon3Colors[Math.floor(Math.random()*splatoon3Colors.length)],
                             user.username,
