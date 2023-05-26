@@ -26,6 +26,7 @@ async function install(interaction) {
 
     let votes = interaction.options.getInteger("votes");
     let color = interaction.options.getString("color");
+    let award = interaction.options.getRole("award");
     const guildId = interaction.guild.id;
 
     try {
@@ -80,7 +81,7 @@ async function install(interaction) {
         return;
     }
 
-    await createFridge(guildId, fromId, toId, upvote, votes, color, interaction.user.id);
+    await createFridge(guildId, fromId, toId, upvote, votes, color, interaction.user.id, award ? award.id : null);
 
     await interaction.reply({ content: `Your fridge <#${toId}> has been created!`});
 }
@@ -139,6 +140,7 @@ async function list(interaction) {
 **Reaction:** ${emoji}
 **Votes:** ${fridge.count}
 **Border:** #${fridge.color}
+**Award:** ${fridge.awardRoleId ? `<@&${fridge.awardRoleId}>` : "NONE"}
 `;
     });
 
@@ -245,7 +247,10 @@ module.exports = {
                         .setDescription("The number of votes it takes to cross-post.  Default is 5.  Minimum is 2."))
                 .addStringOption(option =>
                     option.setName("color")
-                        .setDescription("The border color.  Default is #ffd635.")))
+                        .setDescription("The border color.  Default is #ffd635."))
+                .addRoleOption(option => 
+                    option.setName("award")
+                        .setDescription("The role you want to award the artist for making it to the fridge.")))
         .addSubcommand(subcommand => 
             subcommand.setName("uninstall")
                 .setDescription("Remove a fridge.")

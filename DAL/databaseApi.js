@@ -194,7 +194,7 @@ async function cleanupTheFridge() {
     });
 }
 
-async function createFridge(guildId, source, target, upvote, count, color, createdBy) {
+async function createFridge(guildId, source, target, upvote, count, color, createdBy, awardRoleId) {
     const createdOn = Firestore.Timestamp.now();
 
     const record = {
@@ -204,7 +204,8 @@ async function createFridge(guildId, source, target, upvote, count, color, creat
         count,
         color,
         createdBy,
-        createdOn
+        createdOn,
+        awardRoleId
     };
 
     const doc = await db.collection("fridges").doc(guildId).get();

@@ -171,7 +171,19 @@ discordApi.onReaction(async function(reaction, user) {
         
                         try {
                             await databaseApi.postToFridge(message.id, message.guild.id);
-                        } catch (err) { console.log(err); }       
+                        } catch (err) { console.log(err); }
+
+                        if (board.awardRoleId) {
+                            try {
+                                const member = await reaction.message.guild.members.fetch(user.id);
+                                
+                                if (member) {
+                                    if (!member.roles.cache.has(board.awardRoleId)) {
+                                        await member.roles.add(board.awardRoleId);
+                                    }
+                                }
+                            } catch (err) { console.log(`Unable to assign award role: ${err.message}`); }
+                        }
                     }
 
                     // if we're here, exit because the emoji matched
