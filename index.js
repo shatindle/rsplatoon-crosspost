@@ -175,11 +175,9 @@ discordApi.onReaction(async function(reaction, user) {
 
                         if (board.awardRoleId) {
                             try {
-                                const member = await reaction.message.guild.members.fetch(user.id);
-                                
-                                if (member) {
-                                    if (!member.roles.cache.has(board.awardRoleId)) {
-                                        await member.roles.add(board.awardRoleId);
+                                if (message.member) {
+                                    if (!message.member.roles.cache.has(board.awardRoleId)) {
+                                        await message.member.roles.add(board.awardRoleId);
                                     }
                                 }
                             } catch (err) { console.log(`Unable to assign award role: ${err.message}`); }
