@@ -179,8 +179,12 @@ discordApi.onReaction(async function(reaction, user) {
                                     if (!message.member.roles.cache.has(board.awardRoleId)) {
                                         await message.member.roles.add(board.awardRoleId);
                                     }
+                                } else {
+                                    console.log(`NO MEMBER`);
                                 }
                             } catch (err) { console.log(`Unable to assign award role: ${err.message}`); }
+                        } else {
+                            console.log(`NO ROLE ID: ${JSON.stringify(board.awardRoleId)}`);
                         }
                     }
 
