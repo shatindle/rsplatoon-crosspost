@@ -175,9 +175,10 @@ discordApi.onReaction(async function(reaction, user) {
 
                         if (board.awardRoleId) {
                             try {
-                                if (message.member) {
-                                    if (!message.member.roles.cache.has(board.awardRoleId)) {
-                                        await message.member.roles.add(board.awardRoleId);
+                                const member = await reaction.client.guilds.cache.get(message.guild.id).members.fetch(message.author.id);
+                                if (member) {
+                                    if (!member.roles.cache.has(board.awardRoleId)) {
+                                        await member.roles.add(board.awardRoleId);
                                     }
                                 } else {
                                     console.log(`NO MEMBER`);
