@@ -231,7 +231,8 @@ async function postTwitterToDiscord(
     attachments = [],
     tweetPingRole = null,
     tweetReactions = null,
-    videoStream = null) {
+    videoStream = null,
+    urls = []) {
 
     const contentToSend = {
         embeds: [{
@@ -306,6 +307,19 @@ async function postTwitterToDiscord(
                     videoMessage.crosspost().catch(e => console.log(e));
             } catch (cross_err) {
                 console.log("Unable to crosspost: " + cross_err);
+            }
+        }
+
+        if (urls && urls.length) {
+            for (let thisUrl of urls) {
+                let urlMessage = await channel.send({ content: thisUrl});
+                try {
+                    if (urlMessage.channel.type === "GUILD_NEWS")
+                        // do not wait for crosspost to finish
+                        urlMessage.crosspost().catch(e => console.log(e));
+                } catch (cross_err) {
+                    console.log("Unable to crosspost: " + cross_err);
+                }
             }
         }
 

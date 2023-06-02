@@ -446,6 +446,8 @@ async function crossPostTweets() {
                     if (!(await databaseApi.findByTwitterId(tweet.id))) {
                         let text = tweet.text;
 
+                        if (text && text.indexOf("piped.video/") > -1) text = text.replace("piped.video/", "youtube.com/");
+
                         // check if this tweet has text filters
                         if (twitter.filter && twitter.filter.length > 0) {
                             let tweetFilterMatches = false;
@@ -526,7 +528,8 @@ async function crossPostTweets() {
                             tweet.attachments,
                             twitter.ping,
                             tweetReactions,
-                            videoData
+                            videoData,
+                            tweet.entries.urls
                         );
             
                         await databaseApi.saveTweet(tweet, discordId);
