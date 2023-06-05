@@ -13,7 +13,8 @@ async function getRecentTweets(username, start_date = null, ignore_replies = fal
 
     let user = await userResponse.json();
 
-    let tweetsResponse = await fetch(`${nitter.url}/user/${username}/tweets?_=1${ignore_replies ? "" : "&include_replies=true"}${start_date ? `&start_date=${new Date(start_date).valueOf()}` : ""}`, { 
+    // TODO: figure out why include replies is broken ${ignore_replies ? "" : "&include_replies=true"}
+    let tweetsResponse = await fetch(`${nitter.url}/user/${username}/tweets?_=1${start_date ? `&start_date=${new Date(start_date).valueOf()}` : ""}`, { 
         method: "POST",
         headers: {
             [nitter.apiKey]: nitter.apiValue
