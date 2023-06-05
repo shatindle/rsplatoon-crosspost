@@ -428,7 +428,7 @@ async function crossPostTweets() {
 
         // nitter can pull last 24 hours always since we're not subject to rate limits
         dates.nitter = new Date();
-        dates.nitter.setDate(dates.nitter.getDate() - 4); // TODO: change this back to -1
+        dates.nitter.setDate(dates.nitter.getDate() - 1);
         dates.nitter.setHours(0, 0, 0, 0);
 
         // lower the scope of tweet queries since we don't need *that* much
