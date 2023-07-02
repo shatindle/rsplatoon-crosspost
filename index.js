@@ -6,6 +6,7 @@ const settings = require("./settings.json");
 const twitterApi = require("./DAL/twitterApi");
 const nitterApi = require("./DAL/nitterApi");
 const mastodonApi = require("./DAL/mastodonApi");
+const nintendoNewsApi = require("./DAL/nintendonewsApi");
 const languageApi = require("./DAL/languageApi");
 const japaneseToEnglishSplatoonApi = require("./DAL/japaneseToEnglishSplatoonApi");
 const { Collection } = require("discord.js");
@@ -545,6 +546,57 @@ async function crossPostTweets() {
     dates.running = false;
 }
 
+// this is just for the main server
+async function crossPostNintendoNews() {
+    try {
+        if (!settings.nintendoNewsFeeds) return; 
+
+        for (let { name, baseUrl, feed, lang, translate, targets, pingRole } of settings.nintendoNewsFeeds.sources) {
+            let articles = await nintendoNewsApi.getPosts(`${baseUrl}/${feed}/${lang}`);
+
+            for (let article of articles) {
+                for (let target of targets) {
+                    const recordId = `${feed}-${lang}-${article.id}-${target}`
+
+                    if (!(await databaseApi.findByNintendoNewsId(recordId))) {
+                        let content = article.content;
+
+                        // try to get additional details
+                        try {
+                            const additionalDetails = await nintendoNewsApi.getDetails(`${baseUrl}/${feed}/${lang}`, article.articleId);
+
+                            content += `\n\n${additionalDetails}`;
+                        } catch (err) {
+                            console.log(`Unable to get additional details: ${err}`);
+                        }
+
+                        // tweet hasn't been cross posted, cross post it
+                        const discordId = await discordApi.postNintendoNewsToDiscord(
+                            target,
+                            splatoon3Colors[Math.floor(Math.random()*splatoon3Colors.length)],
+                            name,
+                            content,
+                            translate ? 
+                                await languageApi.translateText(japaneseToEnglishSplatoonApi.swapAll(content)) :
+                                content,
+                            article.startDate,
+                            article.url,
+                            article.image ? [{ type: "image", url: article.image }] : null,
+                            pingRole,
+                            null,
+                            null
+                        );
+            
+                        await databaseApi.saveNintendoNews(recordId, discordId);
+                    }
+                }
+            }
+        }
+    } catch (err) {
+        console.log("Error getting tweets: " + err);
+    }
+}
+
 async function crossPostMastodon() {
     try {
         if (!settings.mastodons) return;
@@ -700,8 +752,13 @@ discordApi.client.once("ready", async () => {
     setInterval(cleanUp, 86400000);
 
     // cross post tweets once per minute
-    await crossPostTweets();
-    setInterval(crossPostTweets, 60000);
+    // TODO: twitter is dead, get rid of this
+    // await crossPostTweets();
+    // setInterval(crossPostTweets, 60000);
+
+    // cross post Nintendo news once per minute
+    await crossPostNintendoNews();
+    setInterval(crossPostNintendoNews, 60000);
 
     // because check once per minute
     await crossPostMastodon();

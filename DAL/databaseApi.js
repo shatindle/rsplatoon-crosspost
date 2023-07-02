@@ -8,6 +8,7 @@ const db = new Firestore({
 
 const postCache = [];
 const tweetCache = [];
+const nintendoNewsCache = [];
 const patchNotesCache = [];
 
 function addToCache(item, cache) {
@@ -35,6 +36,18 @@ function checkTweetCache(item) {
             var first = tweetCache[i];
 
             tweetCache.sort(function(x,y){ return x == first ? -1 : y == first ? 1 : 0; });
+            
+            return first;
+        }
+    }
+}
+
+function checkNintendoNewsCache(item) {
+    for (var i = 0; i < nintendoNewsCache.length; i++) {
+        if (nintendoNewsCache[i].id == item.id) {
+            var first = nintendoNewsCache[i];
+
+            nintendoNewsCache.sort(function(x,y){ return x == first ? -1 : y == first ? 1 : 0; });
             
             return first;
         }
@@ -69,6 +82,36 @@ async function saveTweet(tweet, discordId) {
     await db.collection("tweets").doc(tweet.id).set(record);
 
     addToCache(record, tweetCache);
+}
+
+async function findByNintendoNewsId(id) {
+    const inCacheValue = checkNintendoNewsCache({ id });
+
+    if (inCacheValue)
+        return inCacheValue;
+
+    const response = await db.collection("nintendo-news").doc(id).get();
+
+    if (!response.exists)
+        return null;
+
+    let result = response.data();
+
+    addToCache(result, nintendoNewsCache);
+
+    return result;
+}
+
+async function saveNintendoNews(recordId, discordId) {
+    var record = {
+        id: recordId,
+        discordId,
+        createdOn: Firestore.Timestamp.now()
+    };
+    
+    await db.collection("nintendo-news").doc(recordId).set(record);
+
+    addToCache(record, nintendoNewsCache);
 }
 
 function checkPatchNotesCache(item) {
@@ -350,5 +393,8 @@ module.exports = {
     removeFridgeSource,
 
     findByPatchNotes,
-    savePatchNotes
+    savePatchNotes,
+
+    findByNintendoNewsId,
+    saveNintendoNews
 };

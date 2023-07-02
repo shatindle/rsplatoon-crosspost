@@ -436,6 +436,103 @@ async function postMastodonToDiscord(
     }
 }
 
+async function postNintendoNewsToDiscord(
+    channelId = "",
+    color = 0,
+    username = "",
+    text = "",
+    translatedText = "",
+    createdOn = "",
+    url = "",
+    attachments = [],
+    tweetPingRole = null,
+    tweetReactions = null,
+    videoStream = null) {
+
+    const contentToSend = {
+        embeds: [{
+            title: "News from " + username,
+            color,
+            description: text !== translatedText ? text + "\n\n__Translation__\n" + translatedText : text,
+            timestamp: createdOn
+        }]
+    };
+
+    if (tweetPingRole)
+        contentToSend.content = `<@&${tweetPingRole}>`;
+
+    if (attachments && attachments.filter(t => t.type !== "video").length > 0) {
+        let notVideos = attachments.filter(t => t.type !== "video");
+
+        if (notVideos.length > 0) {
+            contentToSend.files = [];
+
+            for (let i = 0; i < notVideos.length; i++) {
+                console.log(notVideos[i].url);
+                let pictureResponse = await fetch(notVideos[i].url);
+
+                contentToSend.files.push(new MessageAttachment(await pictureResponse.buffer(), `${i}.png`));
+
+                if (i !== 0) {
+                    contentToSend.embeds.push({
+                        image: {
+                            url: `attachment://${i}.png`
+                        }
+                    });
+                } else {
+                    contentToSend.embeds[0].image = {
+                        url: `attachment://${i}.png`
+                    };
+                }
+            }
+        }
+    }
+    
+    // put the link here even if we have an image
+    contentToSend.embeds[0].url = url;
+
+    // respond with a regular message
+    try {
+        var channel = await discord.channels.fetch(channelId);
+        
+        var message = await channel.send(contentToSend);
+        
+        try {
+            if (message.channel.type === "GUILD_NEWS")
+                // do not wait for crosspost to finish
+                message.crosspost().catch(e => console.log(e));
+        } catch (cross_err) {
+            console.log("Unable to crosspost: " + cross_err);
+        }
+
+        try {
+            if (tweetReactions && tweetReactions.length) {
+                for (let tweetReaction of tweetReactions) {
+                    message.react(tweetReaction);
+                }
+            }
+        } catch (react_err) {
+            console.log("Unable to crosspost: " + react_err);
+        }
+
+        if (videoStream && videoStream.type === "video" && videoStream.buffer && videoStream.buffer.length > 0) {
+            let videoMessage = await channel.send({files: [new MessageAttachment(videoStream.buffer, videoStream.name)]});
+            try {
+                if (videoMessage.channel.type === "GUILD_NEWS")
+                    // do not wait for crosspost to finish
+                    videoMessage.crosspost().catch(e => console.log(e));
+            } catch (cross_err) {
+                console.log("Unable to crosspost: " + cross_err);
+            }
+        }
+
+        // @ts-ignore
+        return message.id;
+    } catch (err) {
+        console.log("offending link: " + err.toString());
+    }
+}
+
 async function postPatchNotesToDiscord(channelId = "", content = "", startThread = false, threadName = "") {
     var channel = await discord.channels.fetch(channelId);
     var message = await channel.send(content);
@@ -752,5 +849,6 @@ module.exports = {
     postMastodonToDiscord,
     client: discord,
     postPatchNotesToDiscord,
-    getBoostCount
+    getBoostCount,
+    postNintendoNewsToDiscord
 };
