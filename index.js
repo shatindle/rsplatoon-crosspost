@@ -752,9 +752,8 @@ discordApi.client.once("ready", async () => {
     setInterval(cleanUp, 86400000);
 
     // cross post tweets once per minute
-    // TODO: twitter is dead, get rid of this
-    // await crossPostTweets();
-    // setInterval(crossPostTweets, 60000);
+    await crossPostTweets();
+    setInterval(crossPostTweets, 60000);
 
     // cross post Nintendo news once per minute
     await crossPostNintendoNews();
