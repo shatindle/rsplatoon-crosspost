@@ -764,7 +764,7 @@ discordApi.client.once("ready", async () => {
     setInterval(crossPostMastodon, 60000);
 
     // poll for patches once per hour
-    if (settings.patchNotes) {
+    if (false && settings.patchNotes) {
         await patchNotes();
         setInterval(patchNotes, 1000 * 60 * 60);
     }
