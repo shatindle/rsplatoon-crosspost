@@ -1,4 +1,4 @@
-FROM node:16
+FROM node:18-alpine
 
 LABEL org.opencontainers.image.title="Crosspost Bot" \
       org.opencontainers.image.description="Crossposts from various social media to Discord" \
