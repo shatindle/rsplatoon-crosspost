@@ -1,0 +1,37 @@
+version: '3'
+
+services:
+  r-splatoon-bot:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: r-splatoon-bot
+    restart: unless-stopped
+    networks:
+      - r-splatoon-bot-network
+    volumes:
+      - ./config/r-splatoon/discord.json:/home/node/app/discord.json:ro
+      - ./config/r-splatoon/firebase.json:/home/node/app/firebase.json:ro
+      - ./config/r-splatoon/oauth_info.json:/home/node/app/oauth_info.json:ro
+      - ./config/r-splatoon/settings.json:/home/node/app/settings.json:ro
+      - ./config/r-splatoon/translate.json:/home/node/app/translate.json:ro
+      - ./config/r-splatoon/twitter.json:/home/node/app/twitter.json:ro
+  r-pokemonunite-bot:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: r-pokemonunite-bot
+    restart: unless-stopped
+    networks:
+      - r-pokemonunite-bot-network
+    volumes:
+      - ./config/r-pokemonunite/discord.json:/home/node/app/discord.json:ro
+      - ./config/r-pokemonunite/firebase.json:/home/node/app/firebase.json:ro
+      - ./config/r-pokemonunite/oauth_info.json:/home/node/app/oauth_info.json:ro
+      - ./config/r-pokemonunite/settings.json:/home/node/app/settings.json:ro
+      - ./config/r-pokemonunite/translate.json:/home/node/app/translate.json:ro
+      - ./config/r-pokemonunite/twitter.json:/home/node/app/twitter.json:ro
+
+networks:
+  r-splatoon-bot-network:
+  r-pokemonunite-bot-network:
