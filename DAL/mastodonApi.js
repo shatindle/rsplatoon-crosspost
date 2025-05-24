@@ -30,8 +30,8 @@ async function getPostsFromMastodon(url, name, details) {
             "entries": {
                 "hashtags": record.tags ? record.tags.map(t => t.name) : [],
                 "urls": [],
-                "photos": record.media_attachments ? record.media_attachments.filter(t => t.type === "image").map(t => t.url) : [],
-                "videos": record.media_attachments ? record.media_attachments.filter(t => t.type === "video").map(t => t.url) : []
+                "photos": record.media_attachments ? record.media_attachments.filter(t => typeof t.type === "string" && t.type.toLowerCase().includes("image")).map(t => t.url) : [],
+                "videos": record.media_attachments ? record.media_attachments.filter(t => typeof t.type === "string" && t.type.toLowerCase().includes("video")).map(t => t.url) : []
             },
             "is_reply": !!record.in_reply_to_id,
 
