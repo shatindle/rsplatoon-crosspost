@@ -21,6 +21,15 @@
                 "<node_internals>/**"
             ],
             "program": "${workspaceFolder}/repost.js"
-        }
+        },
+        {
+            "name": "Docker: Attach to Node",
+            "type": "node",
+            "request": "attach",
+            "restart": true,
+            "port": 9229,
+            "localRoot": "${workspaceFolder}",
+            "remoteRoot": "/home/node/app"
+          }
     ]
 }

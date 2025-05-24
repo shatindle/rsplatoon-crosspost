@@ -1,14 +1,27 @@
-const { Client, Intents, Message, MessageReaction, User, MessageAttachment} = require('discord.js');
+const { 
+    Client, 
+    GatewayIntentBits, 
+    Partials,
+    Message, 
+    MessageReaction, 
+    User, 
+    Events,
+    AttachmentBuilder
+} = require('discord.js');
 const fetchWithTimeout = require("./fetchWithTimeout");
 const fetch = require("node-fetch");
 
 const discord = new Client({ 
     intents: [
-        Intents.FLAGS.GUILDS,
-        Intents.FLAGS.GUILD_MESSAGES,
-        Intents.FLAGS.GUILD_MESSAGE_REACTIONS
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.GuildMessageReactions
     ], 
-    partials: ['MESSAGE', 'CHANNEL', 'REACTION'] 
+    partials: [
+        Partials.Message,
+        Partials.Channel,
+        Partials.Reaction
+    ] 
 });
 
 const settings = require("../settings.json");
@@ -272,7 +285,7 @@ async function postTwitterToDiscord(
             url: `attachment://${videoStream.name}`
         };
 
-        contentToSend.files = [new MessageAttachment(videoStream.buffer, videoStream.name)];
+        contentToSend.files = [new AttachmentBuilder(videoStream.buffer, { name: videoStream.name })];
     }
 
     // respond with a regular message
@@ -300,7 +313,7 @@ async function postTwitterToDiscord(
         }
 
         if (videoStream && videoStream.type === "video" && videoStream.buffer && videoStream.buffer.length > 0) {
-            let videoMessage = await channel.send({files: [new MessageAttachment(videoStream.buffer, videoStream.name)]});
+            let videoMessage = await channel.send({files: [new AttachmentBuilder(videoStream.buffer, { name: videoStream.name })]});
             try {
                 if (videoMessage.channel.type === "GUILD_NEWS")
                     // do not wait for crosspost to finish
@@ -365,7 +378,7 @@ async function postMastodonToDiscord(
                 console.log(notVideos[i].url);
                 let pictureResponse = await fetch(notVideos[i].url);
 
-                contentToSend.files.push(new MessageAttachment(await pictureResponse.buffer(), `${i}.png`));
+                contentToSend.files.push(new AttachmentBuilder(await pictureResponse.buffer(), { name: `${i}.png` }));
 
                 if (i !== 0) {
                     contentToSend.embeds.push({
@@ -391,7 +404,7 @@ async function postMastodonToDiscord(
     //         url: `attachment://${videoStream.name}`
     //     };
 
-    //     contentToSend.files = [new MessageAttachment(videoStream.buffer, videoStream.name)];
+    //     contentToSend.files = [new AttachmentBuilder(videoStream.buffer, { name: videoStream.name })];
     // }
 
     // respond with a regular message
@@ -419,7 +432,7 @@ async function postMastodonToDiscord(
         }
 
         if (videoStream && videoStream.type === "video" && videoStream.buffer && videoStream.buffer.length > 0) {
-            let videoMessage = await channel.send({files: [new MessageAttachment(videoStream.buffer, videoStream.name)]});
+            let videoMessage = await channel.send({files: [new AttachmentBuilder(videoStream.buffer, { name: videoStream.name })]});
             try {
                 if (videoMessage.channel.type === "GUILD_NEWS")
                     // do not wait for crosspost to finish
@@ -471,7 +484,7 @@ async function postNintendoNewsToDiscord(
                 console.log(notVideos[i].url);
                 let pictureResponse = await fetch(notVideos[i].url);
 
-                contentToSend.files.push(new MessageAttachment(await pictureResponse.buffer(), `${i}.png`));
+                contentToSend.files.push(new AttachmentBuilder(await pictureResponse.buffer(), { name: `${i}.png` }));
 
                 if (i !== 0) {
                     contentToSend.embeds.push({
@@ -516,7 +529,7 @@ async function postNintendoNewsToDiscord(
         }
 
         if (videoStream && videoStream.type === "video" && videoStream.buffer && videoStream.buffer.length > 0) {
-            let videoMessage = await channel.send({files: [new MessageAttachment(videoStream.buffer, videoStream.name)]});
+            let videoMessage = await channel.send({files: [new AttachmentBuilder(videoStream.buffer, { name: videoStream.name })]});
             try {
                 if (videoMessage.channel.type === "GUILD_NEWS")
                     // do not wait for crosspost to finish
@@ -734,7 +747,7 @@ async function giveRole(memberId) {
 /** 
  * @description Listens for messages it is mentioned in so it can respond
  */
-discord.on('messageCreate', async message => {
+discord.on(Events.MessageCreate, async message => {
     // ignore direct messages
     if (!message.guild) return;
 
@@ -759,7 +772,7 @@ discord.on('messageCreate', async message => {
         await giveRole(message.member.id);
 });
 
-discord.on('messageDelete', async message => {
+discord.on(Events.MessageDelete, async message => {
     // ignore direct messages
     if (!message.guild) return;
 
@@ -773,8 +786,9 @@ discord.on('messageDelete', async message => {
 
     const fetchedLogs = await message.guild.fetchAuditLogs({
         limit: 1,
-        type: 'MESSAGE_DELETE',
+        type: Events.MessageDelete,
     });
+    
     // Since we only have 1 audit log entry in this collection, we can simply grab the first one
     const deletionLog = fetchedLogs.entries.first();
 
@@ -810,7 +824,7 @@ discord.on('messageDelete', async message => {
 });
 
 // handle reactions
-discord.on("messageReactionAdd", async (reaction, user) => {
+discord.on(Events.MessageReactionAdd, async (reaction, user) => {
     // When a reaction is received, check if the structure is partial
     if (reaction.partial) {
         // If the message this reaction belongs to was removed, the fetching might result in an API error which should be handled
