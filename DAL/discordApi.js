@@ -6,7 +6,8 @@ const {
     MessageReaction, 
     User, 
     Events,
-    AttachmentBuilder
+    AttachmentBuilder,
+    ChannelType
 } = require('discord.js');
 const fetchWithTimeout = require("./fetchWithTimeout");
 const fetch = require("node-fetch");
@@ -295,7 +296,7 @@ async function postTwitterToDiscord(
         var message = await channel.send(contentToSend);
         
         try {
-            if (message.channel.type === "GUILD_NEWS")
+            if (message.channel.type === ChannelType.GuildAnnouncement)
                 // do not wait for crosspost to finish
                 message.crosspost().catch(e => console.log(e));
         } catch (cross_err) {
@@ -315,7 +316,7 @@ async function postTwitterToDiscord(
         if (videoStream && videoStream.type === "video" && videoStream.buffer && videoStream.buffer.length > 0) {
             let videoMessage = await channel.send({files: [new AttachmentBuilder(videoStream.buffer, { name: videoStream.name })]});
             try {
-                if (videoMessage.channel.type === "GUILD_NEWS")
+                if (videoMessage.channel.type === ChannelType.GuildAnnouncement)
                     // do not wait for crosspost to finish
                     videoMessage.crosspost().catch(e => console.log(e));
             } catch (cross_err) {
@@ -327,7 +328,7 @@ async function postTwitterToDiscord(
             for (let thisUrl of urls) {
                 let urlMessage = await channel.send({ content: thisUrl});
                 try {
-                    if (urlMessage.channel.type === "GUILD_NEWS")
+                    if (urlMessage.channel.type === ChannelType.GuildAnnouncement)
                         // do not wait for crosspost to finish
                         urlMessage.crosspost().catch(e => console.log(e));
                 } catch (cross_err) {
@@ -414,7 +415,7 @@ async function postMastodonToDiscord(
         var message = await channel.send(contentToSend);
         
         try {
-            if (message.channel.type === "GUILD_NEWS")
+            if (message.channel.type === ChannelType.GuildAnnouncement)
                 // do not wait for crosspost to finish
                 message.crosspost().catch(e => console.log(e));
         } catch (cross_err) {
@@ -434,7 +435,7 @@ async function postMastodonToDiscord(
         if (videoStream && videoStream.type === "video" && videoStream.buffer && videoStream.buffer.length > 0) {
             let videoMessage = await channel.send({files: [new AttachmentBuilder(videoStream.buffer, { name: videoStream.name })]});
             try {
-                if (videoMessage.channel.type === "GUILD_NEWS")
+                if (videoMessage.channel.type === ChannelType.GuildAnnouncement)
                     // do not wait for crosspost to finish
                     videoMessage.crosspost().catch(e => console.log(e));
             } catch (cross_err) {
@@ -511,7 +512,7 @@ async function postNintendoNewsToDiscord(
         var message = await channel.send(contentToSend);
         
         try {
-            if (message.channel.type === "GUILD_NEWS")
+            if (message.channel.type === ChannelType.GuildAnnouncement)
                 // do not wait for crosspost to finish
                 message.crosspost().catch(e => console.log(e));
         } catch (cross_err) {
@@ -531,7 +532,7 @@ async function postNintendoNewsToDiscord(
         if (videoStream && videoStream.type === "video" && videoStream.buffer && videoStream.buffer.length > 0) {
             let videoMessage = await channel.send({files: [new AttachmentBuilder(videoStream.buffer, { name: videoStream.name })]});
             try {
-                if (videoMessage.channel.type === "GUILD_NEWS")
+                if (videoMessage.channel.type === ChannelType.GuildAnnouncement)
                     // do not wait for crosspost to finish
                     videoMessage.crosspost().catch(e => console.log(e));
             } catch (cross_err) {
@@ -551,7 +552,7 @@ async function postPatchNotesToDiscord(channelId = "", content = "", startThread
     var message = await channel.send(content);
 
     try {
-        if (message.channel.type === "GUILD_NEWS")
+        if (message.channel.type === ChannelType.GuildAnnouncement)
             // do not wait for crosspost to finish
             message.crosspost().catch(e => console.log(e));
     } catch (cross_err) {
